@@ -4183,6 +4183,7 @@ window.Quarto = {
   <li><a href="#chapman-kolmogorov-equation" id="toc-chapman-kolmogorov-equation" class="nav-link" data-scroll-target="#chapman-kolmogorov-equation">Chapman-Kolmogorov equation</a></li>
   <li><a href="#communication-classes" id="toc-communication-classes" class="nav-link" data-scroll-target="#communication-classes">Communication classes</a></li>
   <li><a href="#limiting-distributions-of-a-markov-chain" id="toc-limiting-distributions-of-a-markov-chain" class="nav-link" data-scroll-target="#limiting-distributions-of-a-markov-chain">Limiting distributions of a Markov chain</a></li>
+  <li><a href="#mcmc-sampling-strategy" id="toc-mcmc-sampling-strategy" class="nav-link" data-scroll-target="#mcmc-sampling-strategy">MCMC sampling strategy</a></li>
   <li><a href="#extension-to-continuous-state-space" id="toc-extension-to-continuous-state-space" class="nav-link" data-scroll-target="#extension-to-continuous-state-space">Extension to continuous state space</a></li>
   </ul></li>
   <li><a href="#metropolis-hastings-algorithm" id="toc-metropolis-hastings-algorithm" class="nav-link" data-scroll-target="#metropolis-hastings-algorithm">Metropolis-Hastings algorithm</a>
@@ -4434,13 +4435,13 @@ d(j) \triangleq GCD\{n: P_{jj}^{n} &gt; 0\}
 <li><p>Thus we can extend Monte Clarlo integration to Markov (non-i.i.d.) seqeunces — Markov chain Monte Carlo (MCMC)</p></li>
 </ul>
 </section>
-<section id="mcmc-sampling-strategy" class="level4">
-<h4 class="anchored" data-anchor-id="mcmc-sampling-strategy">MCMC sampling strategy</h4>
+</section>
+<section id="mcmc-sampling-strategy" class="level3">
+<h3 class="anchored" data-anchor-id="mcmc-sampling-strategy">MCMC sampling strategy</h3>
 <ul>
 <li><p>Construct an irreducible, aperiodic, and positive recurrent Markov chain for which the stationary distribution equals the target distribution <span class="math inline">\(f\)</span>.</p></li>
 <li><p>From these samples, expectations of functions of random variable <span class="math inline">\(X \sim f\)</span> can be reliably estimated.</p></li>
 </ul>
-</section>
 <section id="detailed-balance-condition" class="level4">
 <h4 class="anchored" data-anchor-id="detailed-balance-condition">Detailed balance condition</h4>
 <ul>
@@ -4480,7 +4481,7 @@ P_{ij} \rightarrow K(x, y)
 <ol type="1">
 <li><p>Sample a condidate alue <span class="math inline">\(\tilde{X}\)</span> from a <em>proposal distribution</em> <span class="math inline">\(g(\cdot \mid X^{(t)})\)</span>.</p></li>
 <li><p>Compute the Metropolis-Hastings ratio <span class="math display">\[
-R(X^{(t)}, \tilde{X}) = \frac{f(\tilde{X})g(X^{(t)}\mid \tilde{X})}{f(X^{(t)})g(\tilde{X}\mid X{^(t)})}
+R(X^{(t)}, \tilde{X}) = \frac{f(\tilde{X})g(X^{(t)}\mid \tilde{X})}{f(X^{(t)})g(\tilde{X}\mid X^{(t)})}
 .
 \]</span></p></li>
 <li><p>Sample a value for <span class="math inline">\(X^{(t+1)}\)</span> such that <span class="math display">\[
@@ -4777,7 +4778,7 @@ N\left( \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \begin{pmatrix} 1 &amp; \rho \\ \r
 <span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(gibbssamp <span class="ot">&lt;-</span> <span class="fu">Rgibbs</span>(<span class="dv">10000</span>, <span class="dv">500</span>, <span class="at">rho =</span> <span class="fl">0.5</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 11.455   0.003  11.462 </code></pre>
+ 10.802   0.000  10.803 </code></pre>
 </div>
 </div>
 <div class="cell">
