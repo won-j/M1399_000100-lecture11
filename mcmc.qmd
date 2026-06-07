@@ -254,7 +254,7 @@ $$
     \alpha(x, y) = \min\left\{1, \frac{f(y)g(x\mid y)}{f(x)g(y\mid x)}\right\}
     ,
     \quad
-    r(x) = \int \alpha(x, y) g(x \mid y) dv
+    r(x) = \int \alpha(x, y) g(x \mid y) dy
 $$
 and the $\delta$ is the Dirac delta function.
 
@@ -445,23 +445,32 @@ plot_posterior <- function(posterior_df, target_log_density) {
 set.seed(2020)
 sigma <- 10
 my_prop <- independent_normal_proposal(prop_sd = sigma)
-my_target1 <- log_binom_logit_posterior(x = 18, n = 20, sigma = sigma)
+my_target1 <- log_binom_logit_posterior(x = 18, n = 20, 
+                                        sigma = sigma)
 fit1 <- MH_sampler(target_log_density = my_target1,
   proposal = my_prop, N = 20000, burn_in = 2000,
   thin = 5)
 posterior_df1 <- data.frame(theta = fit1$theta)
-cat("Acceptance rate = ", fit1$acceptance_rate, ", Sample size = ", length(fit1$theta), "\n")
-my_target2 <- log_binom_logit_posterior(x = 180, n = 200, sigma = sigma)
+cat("Acceptance rate = ", fit1$acceptance_rate, ", 
+    Sample size = ", length(fit1$theta), "\n")
+my_target2 <- log_binom_logit_posterior(x = 180, n = 200, 
+                                        sigma = sigma)
 fit2 <- MH_sampler(target_log_density = my_target2,
   proposal = my_prop, N = 20000, burn_in = 2000,
   thin = 5)
 posterior_df2 <- data.frame(theta = fit2$theta)
-cat("Acceptance rate = ", fit2$acceptance_rate, ", Sample size = ", length(fit2$theta), "\n")
+cat("Acceptance rate = ", fit2$acceptance_rate, ", 
+    Sample size = ", length(fit2$theta), "\n")
 ```
 
 ```{r}
-plot_posterior(posterior_df1, target_log_density = my_target1)
-plot_posterior(posterior_df2, target_log_density = my_target2)
+p_mle <- 18/20; theta_mle = log(p_mle/(1-p_mle))
+p1 <- plot_posterior(posterior_df1, target_log_density = my_target1)
+p1 + geom_vline(xintercept = theta_mle, linetype = "dashed", 
+                linewidth = 1, color = "orange")
+p2 <- plot_posterior(posterior_df2, target_log_density = my_target2)
+p2 + geom_vline(xintercept = theta_mle, linetype = "dashed", 
+                linewidth = 1.5, color = "orange")
 ```
 
 
@@ -520,7 +529,8 @@ system.time(gibbssamp <- Rgibbs(10000, 500, rho = 0.5))
 ```
 
 ```{r}
-ggplot(gibbssamp, aes(x=x1, y=x2)) + geom_point(size = 1, alpha=0.2) + 
+ggplot(gibbssamp, aes(x=x1, y=x2)) + 
+    geom_point(size = 1, alpha=0.2) + 
 geom_density2d() + theme_minimal() + theme(aspect.ratio = 1) 
 ```
 
