@@ -4458,14 +4458,14 @@ d(j) \triangleq GCD\{n: P_{jj}^{n} &gt; 0\}
 <ul>
 <li><p>Continuous-state-space, time-homogeneous MC <span class="math display">\[
 P_{ij} \rightarrow K(x, y)
-\]</span> where <span class="math inline">\(K(x, y) = P_{X_{n+1}\mid X_n}(y \mid x\)</span> is the <em>transition density</em> such that <span class="math inline">\(\int_S K(x, y) dy = 1\)</span>.</p></li>
+\]</span> where <span class="math inline">\(K(x, y) = P_{X_{n+1}\mid X_n}(y \mid x)\)</span> is the <em>transition density</em> such that <span class="math inline">\(\int_S K(x, y) dy = 1\)</span>.</p></li>
 <li><p>Irreducibility, recurrence, stationary distribution, etc. are defined analogously as the discrete state space case.</p></li>
 <li><p>Detailed balance condition: <span class="math display">\[
 \pi(x) K(x, y) = \pi(y) K(y, x)
 \implies
 \pi(y) = \int_S \pi(x) K(x, y) dx
 \]</span></p></li>
-<li><p>Limiting theorems also hold analogously.</p></li>
+<li><p>Limit theorems also hold analogously.</p></li>
 </ul>
 </section>
 </section>
@@ -4778,7 +4778,7 @@ N\left( \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \begin{pmatrix} 1 &amp; \rho \\ \r
 <span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(gibbssamp <span class="ot">&lt;-</span> <span class="fu">Rgibbs</span>(<span class="dv">10000</span>, <span class="dv">500</span>, <span class="at">rho =</span> <span class="fl">0.5</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 10.802   0.000  10.803 </code></pre>
+ 10.715   0.000  10.716 </code></pre>
 </div>
 </div>
 <div class="cell">
