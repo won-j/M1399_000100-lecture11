@@ -4540,7 +4540,7 @@ r(i) = \sum_{j&#39;}\alpha(i, j&#39;)g(j&#39;\mid i) &lt; \sum_{j&#39;} g(j&#39;
 \]</span> and <span class="math inline">\(K(i, i) = \alpha(i, i)g(i, i) + 1 - r(i) &gt; 0\)</span>.</p></li>
 <li><p>Therefore <span class="math inline">\(d(i) = 1\)</span>.</p></li>
 </ul>
-<div class="cell">
+<div class="cell" data-output-fold="true" data-jupyter="{&quot;outputs_hidden&quot;:true}">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>MH_sampler <span class="ot">&lt;-</span> <span class="cf">function</span>(target_log_density, proposal,</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">N =</span> <span class="dv">10000</span>, <span class="at">burn_in =</span> <span class="dv">1000</span>, </span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                       <span class="at">thin =</span> <span class="dv">1</span> ) {</span>
@@ -4631,7 +4631,7 @@ R(\theta^{(t)}, \tilde{\theta})
 \end{align*}
 \]</span></li>
 </ul>
-<div class="cell">
+<div class="cell" data-output-fold="true" data-jupyter="{&quot;outputs_hidden&quot;:true}">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>log_binom_logit_posterior <span class="ot">&lt;-</span> <span class="cf">function</span>(x, n, sigma) {</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(theta) {</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    p <span class="ot">&lt;-</span> <span class="fu">plogis</span>(theta)  <span class="co"># numerically stable logistic transform</span></span>
@@ -4686,40 +4686,61 @@ R(\theta^{(t)}, \tilde{\theta})
 <span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">14</span>)</span>
 <span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div class="cell">
+<div class="cell" data-output-fold="true" data-jupyter="{&quot;outputs_hidden&quot;:true}">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2020</span>)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>sigma <span class="ot">&lt;-</span> <span class="dv">10</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>my_prop <span class="ot">&lt;-</span> <span class="fu">independent_normal_proposal</span>(<span class="at">prop_sd =</span> sigma)</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>my_target1 <span class="ot">&lt;-</span> <span class="fu">log_binom_logit_posterior</span>(<span class="at">x =</span> <span class="dv">18</span>, <span class="at">n =</span> <span class="dv">20</span>, </span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">sigma =</span> sigma)</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>fit1 <span class="ot">&lt;-</span> <span class="fu">MH_sampler</span>(<span class="at">target_log_density =</span> my_target1,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">proposal =</span> my_prop, <span class="at">N =</span> <span class="dv">20000</span>, <span class="at">burn_in =</span> <span class="dv">2000</span>,</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">thin =</span> <span class="dv">5</span>)</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>posterior_df1 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">theta =</span> fit1<span class="sc">$</span>theta)</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Acceptance rate = &quot;</span>, fit1<span class="sc">$</span>acceptance_rate, <span class="st">&quot;, </span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="st">    Sample size = &quot;</span>, <span class="fu">length</span>(fit1<span class="sc">$</span>theta), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  fit1 <span class="ot">&lt;-</span> <span class="fu">MH_sampler</span>(<span class="at">target_log_density =</span> my_target1,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">proposal =</span> my_prop, <span class="at">N =</span> <span class="dv">20000</span>, <span class="at">burn_in =</span> <span class="dv">2000</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">thin =</span> <span class="dv">5</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details><summary>Standard Output</summary>
+<div class="cell-output cell-output-stdout">
+<pre><code>   user  system elapsed 
+  0.296   0.005   0.301 </code></pre>
+</div>
+</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>posterior_df1 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">theta =</span> fit1<span class="sc">$</span>theta)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Acceptance rate = &quot;</span>, fit1<span class="sc">$</span>acceptance_rate, <span class="st">&quot;, </span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="st">    Sample size = &quot;</span>, <span class="fu">length</span>(fit1<span class="sc">$</span>theta), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details><summary>Standard Output</summary>
 <div class="cell-output cell-output-stdout">
 <pre><code>Acceptance rate =  0.09155458 , 
     Sample size =  3600 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>my_target2 <span class="ot">&lt;-</span> <span class="fu">log_binom_logit_posterior</span>(<span class="at">x =</span> <span class="dv">180</span>, <span class="at">n =</span> <span class="dv">200</span>, </span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">sigma =</span> sigma)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>fit2 <span class="ot">&lt;-</span> <span class="fu">MH_sampler</span>(<span class="at">target_log_density =</span> my_target2,</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">proposal =</span> my_prop, <span class="at">N =</span> <span class="dv">20000</span>, <span class="at">burn_in =</span> <span class="dv">2000</span>,</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">thin =</span> <span class="dv">5</span>)</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>posterior_df2 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">theta =</span> fit2<span class="sc">$</span>theta)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Acceptance rate = &quot;</span>, fit2<span class="sc">$</span>acceptance_rate, <span class="st">&quot;, </span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="st">    Sample size = &quot;</span>, <span class="fu">length</span>(fit2<span class="sc">$</span>theta), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>my_target2 <span class="ot">&lt;-</span> <span class="fu">log_binom_logit_posterior</span>(<span class="at">x =</span> <span class="dv">180</span>, <span class="at">n =</span> <span class="dv">200</span>, </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">sigma =</span> sigma)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  fit2 <span class="ot">&lt;-</span> <span class="fu">MH_sampler</span>(<span class="at">target_log_density =</span> my_target2,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">proposal =</span> my_prop, <span class="at">N =</span> <span class="dv">20000</span>, <span class="at">burn_in =</span> <span class="dv">2000</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">thin =</span> <span class="dv">5</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details><summary>Standard Output</summary>
+<div class="cell-output cell-output-stdout">
+<pre><code>   user  system elapsed 
+  0.283   0.000   0.283 </code></pre>
+</div>
+</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>posterior_df2 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">theta =</span> fit2<span class="sc">$</span>theta)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Acceptance rate = &quot;</span>, fit2<span class="sc">$</span>acceptance_rate, <span class="st">&quot;, </span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="st">    Sample size = &quot;</span>, <span class="fu">length</span>(fit2<span class="sc">$</span>theta), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details><summary>Standard Output</summary>
 <div class="cell-output cell-output-stdout">
 <pre><code>Acceptance rate =  0.02965148 , 
     Sample size =  3600 </code></pre>
 </div>
+</details>
 </div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>p_mle <span class="ot">&lt;-</span> <span class="dv">18</span><span class="sc">/</span><span class="dv">20</span>; theta_mle <span class="ot">=</span> <span class="fu">log</span>(p_mle<span class="sc">/</span>(<span class="dv">1</span><span class="sc">-</span>p_mle))</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">plot_posterior</span>(posterior_df1, <span class="at">target_log_density =</span> my_target1)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>p1 <span class="sc">+</span> <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> theta_mle, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, </span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">linewidth =</span> <span class="dv">1</span>, <span class="at">color =</span> <span class="st">&quot;orange&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell" data-output-fold="true" data-jupyter="{&quot;outputs_hidden&quot;:true}">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>p_mle <span class="ot">&lt;-</span> <span class="dv">18</span><span class="sc">/</span><span class="dv">20</span>; theta_mle <span class="ot">=</span> <span class="fu">log</span>(p_mle<span class="sc">/</span>(<span class="dv">1</span><span class="sc">-</span>p_mle))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">plot_posterior</span>(posterior_df1, <span class="at">target_log_density =</span> my_target1)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>p1 <span class="sc">+</span> <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> theta_mle, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">linewidth =</span> <span class="dv">1</span>, <span class="at">color =</span> <span class="st">&quot;orange&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details><summary>Display Output</summary>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -4727,9 +4748,11 @@ R(\theta^{(t)}, \tilde{\theta})
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fu">plot_posterior</span>(posterior_df2, <span class="at">target_log_density =</span> my_target2)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>p2 <span class="sc">+</span> <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> theta_mle, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, </span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">linewidth =</span> <span class="fl">1.5</span>, <span class="at">color =</span> <span class="st">&quot;orange&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fu">plot_posterior</span>(posterior_df2, <span class="at">target_log_density =</span> my_target2)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>p2 <span class="sc">+</span> <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> theta_mle, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">linewidth =</span> <span class="fl">1.5</span>, <span class="at">color =</span> <span class="st">&quot;orange&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details><summary>Display Output</summary>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -4737,6 +4760,7 @@ R(\theta^{(t)}, \tilde{\theta})
 </figure>
 </div>
 </div>
+</details>
 </div>
 </section>
 </section>
@@ -4770,32 +4794,35 @@ N\left( \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \begin{pmatrix} 1 &amp; \rho \\ \r
 <li><p><span class="math inline">\(X_1 \mid \{X_2 = x_2\} \sim N(\rho x_2, 1 - \rho^2)\)</span>, <span class="math inline">\(X_2 \mid \{X_1 = x_1\} \sim N(\rho x_1, 1 - \rho^2)\)</span>.</p></li>
 <li><p>Therefore, sample <span class="math inline">\(X_1^{(t+1)} \sim N(\rho X_2^{(t)}, 1 - \rho^2)\)</span> and <span class="math inline">\(X_2^{(t+1)} \sim N(\rho X_1^{(t+1)}, 1 - \rho^2)\)</span>.</p></li>
 </ul>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>Rgibbs <span class="ot">&lt;-</span> <span class="cf">function</span>(N, thin, <span class="at">rho=</span><span class="dv">0</span>) {</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  mat <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="at">nrow=</span>N, <span class="at">ncol=</span><span class="dv">2</span>)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> y <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>N) {</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>thin) {</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>      x <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, rho <span class="sc">*</span> y, <span class="fu">sqrt</span>(<span class="dv">1</span> <span class="sc">-</span> rho <span class="sc">*</span> rho))</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>      y <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, rho <span class="sc">*</span> x, <span class="fu">sqrt</span>(<span class="dv">1</span> <span class="sc">-</span> rho <span class="sc">*</span> rho))</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    mat[i,] <span class="ot">&lt;-</span> <span class="fu">c</span>(x, y)</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(mat)</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(df) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;x1&quot;</span>, <span class="st">&quot;x2&quot;</span>)</span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  df</span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2020</span>)</span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(gibbssamp <span class="ot">&lt;-</span> <span class="fu">Rgibbs</span>(<span class="dv">10000</span>, <span class="dv">500</span>, <span class="at">rho =</span> <span class="fl">0.5</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell" data-output-fold="true" data-jupyter="{&quot;outputs_hidden&quot;:true}">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>Rgibbs <span class="ot">&lt;-</span> <span class="cf">function</span>(N, thin, <span class="at">rho=</span><span class="dv">0</span>) {</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  mat <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="at">nrow=</span>N, <span class="at">ncol=</span><span class="dv">2</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> y <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>N) {</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>thin) {</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>      x <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, rho <span class="sc">*</span> y, <span class="fu">sqrt</span>(<span class="dv">1</span> <span class="sc">-</span> rho <span class="sc">*</span> rho))</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>      y <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, rho <span class="sc">*</span> x, <span class="fu">sqrt</span>(<span class="dv">1</span> <span class="sc">-</span> rho <span class="sc">*</span> rho))</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    mat[i,] <span class="ot">&lt;-</span> <span class="fu">c</span>(x, y)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(mat)</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(df) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;x1&quot;</span>, <span class="st">&quot;x2&quot;</span>)</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  df</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2020</span>)</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(gibbssamp <span class="ot">&lt;-</span> <span class="fu">Rgibbs</span>(<span class="dv">10000</span>, <span class="dv">500</span>, <span class="at">rho =</span> <span class="fl">0.5</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details><summary>Standard Output</summary>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 10.904   0.000  10.906 </code></pre>
+ 10.735   0.000  10.736 </code></pre>
 </div>
+</details>
 </div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(gibbssamp, <span class="fu">aes</span>(<span class="at">x=</span>x1, <span class="at">y=</span>x2)) <span class="sc">+</span> </span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">1</span>, <span class="at">alpha=</span><span class="fl">0.2</span>) <span class="sc">+</span> </span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_density2d</span>() <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">aspect.ratio =</span> <span class="dv">1</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell" data-output-fold="true" data-jupyter="{&quot;outputs_hidden&quot;:true}">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(gibbssamp, <span class="fu">aes</span>(<span class="at">x=</span>x1, <span class="at">y=</span>x2)) <span class="sc">+</span> </span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">1</span>, <span class="at">alpha=</span><span class="fl">0.2</span>) <span class="sc">+</span> </span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_density2d</span>() <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">aspect.ratio =</span> <span class="dv">1</span>) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details><summary>Display Output</summary>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -4803,6 +4830,7 @@ N\left( \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \begin{pmatrix} 1 &amp; \rho \\ \r
 </figure>
 </div>
 </div>
+</details>
 </div>
 </section>
 <section id="relation-with-metropolis-hastings" class="level3">
