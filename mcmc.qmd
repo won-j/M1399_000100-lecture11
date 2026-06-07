@@ -176,7 +176,7 @@ with probabilty 1.
 -   The ergodic theorem extends the strong law of large numbers from i.i.d. sequences to Markov chains.
 -   Thus we can extend Monte Clarlo integration to Markov (non-i.i.d.) seqeunces --- Markov chain Monte Carlo (MCMC)
 
-#### MCMC sampling strategy
+### MCMC sampling strategy
 
 -   Construct an irreducible, aperiodic, and positive recurrent Markov chain for which the stationary distribution equals the target distribution $f$.
 
@@ -226,7 +226,7 @@ For $t= 0, 1, \dotsc$,
 
 2.  Compute the Metropolis-Hastings ratio
 $$
-    R(X^{(t)}, \tilde{X}) = \frac{f(\tilde{X})g(X^{(t)}\mid \tilde{X})}{f(X^{(t)})g(\tilde{X}\mid X{^(t)})}
+    R(X^{(t)}, \tilde{X}) = \frac{f(\tilde{X})g(X^{(t)}\mid \tilde{X})}{f(X^{(t)})g(\tilde{X}\mid X^{(t)})}
     .
 $$
 
