@@ -199,7 +199,7 @@ then $\pi = (\pi_i)_{i\in S}$ is a stationary distribution of the MC. (Why?)
 $$
     P_{ij} \rightarrow K(x, y)
 $$
-where $K(x, y) = P_{X_{n+1}\mid X_n}(y \mid x$ is the *transition density* such that $\int_S K(x, y) dy = 1$.
+where $K(x, y) = P_{X_{n+1}\mid X_n}(y \mid x)$ is the *transition density* such that $\int_S K(x, y) dy = 1$.
 
 -   Irreducibility, recurrence, stationary distribution, etc. are defined analogously as the discrete state space case.
 
@@ -210,7 +210,7 @@ $$
     \pi(y) = \int_S \pi(x) K(x, y) dx
 $$
 
--   Limiting theorems also hold analogously.
+-   Limit theorems also hold analogously.
 
 ## Metropolis-Hastings algorithm
 
