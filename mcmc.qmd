@@ -1,5 +1,5 @@
 ---
-title: 'Lecture 10: Monte Carlo Integration'
+title: 'Lecture 11: Markov Chain Monte Carlo'
 author: Joong-Ho Won
 institution: Seoul National University
 date: today
@@ -26,656 +26,617 @@ sessionInfo()
 library(ggplot2)
 ```
 
+## Introduction
 
-## Naïve Monte Carlo
+Markov chain Monte Carlo (MCMC) is a collection of methods simulating a distribution $\pi$ by generating a Markov chain whose limiting distribution equals $\pi$.
 
-### Goal
+## Review: Markov chain
 
-To evaluate $\int_A g(x) dx$, $g:\mathbb{R}^d \to \mathbb{R}$.
+### Definition
 
-More generally, to evaluate $\int_A g(x) w(x)dx$, $g:\mathbb{R}^d \to \mathbb{R}$, for $w(x) > 0$ on $A \subset \mathbb{R}^d$ and $\int_A w(x)dx < \infty$.
-
-* cf. (Gaussian) quadrature: $\int_a^b g(x) w(x)dx$, $g:\mathbb{R} \to \mathbb{R}$, for $w(x) > 0$ on $(a, b)$ and $\int_a^b w(x)dx < \infty$.
-* Extension of quadrature methods to $d$ dimension required $n^d$ points (curse of dimensionality)
-* Quadrature methods works well mostly with smooth functions.
-
-After appropriate normalization,
+A distcrete time, discrete-state-space Markov chain is a sequence of random variables $\{X_n\}$ where $X_n \subset S \subset \mathbb{N}$ for all $n=0, 1, 2,\dotsc$,
+with 
 $$
-    \int_A g(x) f(x)dx = E[g(X)], \quad X \sim F,
-$$
-where distribution $F$ has density $f$.
-
-By the law of large numbers,
-$$
-    E[g(X)] \approx \frac{1}{n}\sum_{i=1}^ng(X_i),  \quad X_i \stackrel{iid}{\sim} F
-$$
-for sufficiently large $n$. This method is called the **Monte Carlo method** for approximating the integral.
-
-The RHS of the above approximate equality, denoted by $\hat{I}_n(f)$ is an *unbiased estimator* of the LHS.
-
-If in addition, if $\text{Var}[g(X)]$ is finite or $g(x)$ is square integrable, the variance of this unbiased estimator is 
-$$
-\frac{1}{n}\text{Var}[g(X)] = \frac{\int_A g^2(x)f(x)dx - (\int_A g(x)f(x)dx)^2}{n}
-$$
-and the central limit theorem provides an (approximate) $100(1-\alpha)$% confidence interval
-$$
-    \left[\hat{I}_n(f) - z_{1-\alpha/2}\frac{\text{Sd}[g(X)]}{\sqrt{n}}, \hat{I}_n(f) + z_{1-\alpha/2}\frac{\text{Sd}[g(X)]}{\sqrt{n}} \right].
-$$
-Since $\text{Sd}[g(X)]$ is unknown in general, we may use
-$$
- \widehat{\text{Sd}[g(X)]} = \left( \frac{1}{n-1}\sum_{i=1}^n[f(X_i) - I_n(f)]^2 \right)^{1/2}.
-$$
-
-
-Therefore we can measure the accuracy of the esitmator $\hat{I}_n(f)$ by the relative error $\widehat{\text{Sd}[g(X)]} / [\hat{I}_n(f)\sqrt{n}]$.
-
-So the key feasures of MC itegration are
-
-1. The error estimate does not depende direcly on the dimsnsionality of the underlying space
-2. The error diminisihes at a slow rate of $O(n^{-1/2})$.
-
-On the other hand, quadrature methods (in one dimension) converges at the rate of $O(n^{-k})$ for $k \ge 2$. If $n = m^d$ points are used in $d$ dimensions, then the error is $O(n^{-k/d})$. So the numerical merit of MC integration over quadrature methods is roughly for $d \ge 4$.
-
-Nevertheless MC has an attraction of very simple implementation: just sample and average.
-
-
-### Example 1
-
-$$
-\int_0^{\infty} \sqrt{x}e^{-x}dx = \frac{\sqrt{\pi}}{2} \approx 0.88627
-$$
-
-```{r}
-#| output-fold: true
-#| jupyter: {outputs_hidden: true}
-myfn <- function(x) sqrt(x) * exp(-x)
-integrate(myfn, 0, Inf)    # (adaptive) quadrature
-```
-
-```{r}
-#| output-fold: true
-#| jupyter: {outputs_hidden: true}
-set.seed(2020)
-nsamp <- 10000  # try 100000, too
-x <- rexp(nsamp, 1)   # X ~ Exp(1)
-xsqrt <- sqrt(x)
-MCest <- cumsum(xsqrt) / seq_along(xsqrt) # cumulative average
-RVdata <- data.frame(nsamp = seq_along(xsqrt), est = MCest)
-ggplot(RVdata) + geom_line(aes(x = nsamp, y = est), col="red", lwd=1.2) +
-    geom_hline(yintercept = sqrt(pi) * 0.5, col="dark blue", lwd=1) +
-    xlab("Sample size") + ylab("MC integration")
-```
-
-### Example 2
-
-$$
-\int_0^{1} \frac{1}{\sqrt{x}} = 2
-$$
-
-```{r}
-#| output-fold: true
-#| jupyter: {outputs_hidden: true}
-myfn <- function(x) 1 / sqrt(x) 
-integrate(myfn, 0, 1)    # (adaptive) quadrature
-```
-
-```{r}
-#| output-fold: true
-#| jupyter: {outputs_hidden: true}
-set.seed(2020)
-nsamp <- 10000  # try 100000, too
-x <- runif(nsamp)   # X ~ unif(0, 1)
-xsqrtinv <- 1 / sqrt(x)
-MCest <- cumsum(xsqrtinv) / seq_along(xsqrtinv) # cummulative average
-RVdata <- data.frame(nsamp = seq_along(xsqrtinv), est = MCest)
-ggplot(RVdata) + geom_line(aes(x = nsamp, y = est), col="red", lwd=1.2) +
-    geom_hline(yintercept = 2, col="dark blue", lwd=1) +
-    xlab("Sample size") + ylab("MC integration")
-```
-
-Accuracy of this MC integration depends on 
-$$
-    \text{Var}[1/\sqrt{X}] = E[1 / X] - E[1 / \sqrt{X}]^2 = \int_0^1 \frac{1}{x}dx - 2^2 = \infty
-$$
-
-So the naïve MC is not a good estmator of the integral.
-
-```{r}
-#| output-fold: true
-#| jupyter: {outputs_hidden: true}
-set.seed(2020)
-nsim <- 1000
-nsamp <- 10000  # try 100000, too
-x <- runif(nsamp * nsim)   # X ~ unif(0, 1)
-xsqrtinv <- 1 / sqrt(x)
-MCest <- apply(matrix(xsqrtinv, nrow = nsim), 1, mean)
-MCerr <- var(MCest)
-RVdata <- data.frame(MCest = MCest)
-ggplot(RVdata, aes(x = MCest)) + geom_histogram(binwidth = 0.01, col="black", fill="white") +
-    stat_function(
-        fun  = function(x, mean, sd, n, bw) dnorm(x = x, mean = mean, sd = sd) * n * bw,
-        args = c(mean = mean(MCest), sd = sqrt(MCerr), n = nsim, bw = 0.01),
-        lwd  = 1.2, col = "dark red"
-    ) +
-    xlim(c(1.9, 2.2))
-```
-
-A better approach is change of variable: let $t = \sqrt{x}$. Then $dt = \frac{1}{2\sqrt{x}}dx$ and,
-$$
-    \int_0^1 \frac{1}{\sqrt{x}}dx = \int_0^1 2dt
-$$
-
-Thus the MC estimate of the RHS is $\frac{1}{n}\sum_{i=1}^n 2 = 2$, exact.
-
-In general, if integrand gets closer to a constant, then  MC gets more accurate.
-
-### Digression: Buffon's needle
-
-> A table is ruled with equidistant parallel lines a distance $D$ apart. A needle of length $L$, where $L \le D$, is randomly thrown on the table. What is the probability that the needle will intersect one of the lines (the other possibility being that the needle will be completely contained in the strip between two lines)?
-
-
-![Buffon's needle](./images/buffon.png)
-
-* Let $X$ be the distance from the needle to the nearest parallel line.
-
-* Let $\Theta$ be the angle between the needle and the projected line of length $X$.
-
-* The needle will intersect a line if the hypotenuse of the right triangle is less that $L/2$, or
-$X < \frac{L}{2}\cos\Theta$.
-
-It is reasonable to assume that $X$ and $\Theta$ are independent, uniformly distributed in $[0, D/2]$ and $[0, \pi/2]$. Hence
-$$
-\begin{aligned}
-	P(X < \frac{L}{2}\cos\Theta ) &= E\left[\mathbb{I}\{X < \frac{L}{2}\cos\Theta\}\right] \\
-    &= \iint_{x<0.5L\cos \theta}f_X(x)f_{\Theta}(\theta) dxd\theta \\
-	&= \frac{4}{\pi D}\int_0^{\pi/2}\int_0^{0.5L\cos\theta} dxd\theta \\
-	&= \frac{4}{\pi D}\int_0^{\pi/2}\frac{L}{2}\cos\theta d\theta
-	= \frac{2L}{\pi D}
-	.
-\end{aligned}
+    \Pr(X_{n+1} \mid X_n = i, X_{n-1} = i_{n-1}, \dotsc ) = \Pr(X_{n+1}=i \mid X_n = i) =: P_{ij}(n)
+    .
 $$ 
+Here, $S$ is called the *state space*, and $P_{ij}$ is called the (state-) transition probabilty.
 
-Italian mathematician Mario Lazzarini (1901) used this result to estimate the value of $\pi$. How?
+-   Obviously, $\sum_{j\in S} P_{ij}(n) = 1$, for all $i\in S$.
+-   $P(n) := (P_{ij}(n))_{i,j \in S}$, transition probability matrix.
+-   $P(n) = P$ for all $n$, time-homogenity.
 
-* Set $D=1$, $L = D/2 = 1/2$.
-* If in $n$ trials, $k$ hits occur, then $\pi \approx n/k$.
+#### Example 1. Simple random walk
 
-```{r}
-#| output-fold: true
-#| jupyter: {outputs_hidden: true}
-set.seed(2020)
-nsamp <- 100000  # try 500000, too
-x <- runif(nsamp) * 0.5   # X ~ unif(0, 1/2)
-thet <- runif(nsamp) * pi / 2   # theta ~ unif(0, pi/2)
-numhits <- (x < 0.25 * cos(thet))
-pihat <- seq_along(numhits) / cumsum(numhits) 
-RVdata <- data.frame(nsamp = seq_along(numhits), est = pihat)
-tail(RVdata)
-ggplot(RVdata) + geom_line(aes(x = nsamp, y = est), col="red", lwd=1.2) +
-    geom_hline(yintercept = pi, col="dark blue", lwd=1) +
-    xlab("Sample size") + ylab("Estimate") + ylim(3.0, 3.2)
-```
-
-## Variance reduction methods
-
-We live with the $O(n^{-1/2})$ convergence rate of MC, and attempt to reduce the constant factor, i.e., the $\sqrt{\text{Var}[g(X)]}$ part.
-
-### Importance sampling
-
-In evaluating
 $$
-I = \int_{-\infty}^{\infty} g(x) f(x)dx = E_f[g(X)],
-$$
-consider instead
-$$
-I = \int_{-\infty}^{\infty} g(x) f(x)dx = \int_{-\infty}^{\infty} \frac{g(x)f(x)}{h(x)} h(x)dx
-= E_h\left[\frac{g(X)f(X)}{h(X)}\right]
-$$
-for another density $h(x)$ such that $h(x) > 0$ whenever $g(x)f(x) \neq 0$.
-
-If it is easy to sample from the distribution with density $h(x)$, then we may estimate $I$ by
-$$
-\hat{I}_{\text{imp}} = \frac{1}{n}\sum_{i=1}^n\frac{g(X_i)f(X_i)}{h(X_i)},
+\begin{align*}
+\Delta_i &= \begin{cases} -1, & \text{w.p.} p \\ -1, & \text{w.p.} 1- p \end{cases}
+,
 \quad
-X_i \stackrel{iid}{\sim} h
-$$
-instead of the simple estimator
-$$
-\hat{I}_{\text{naive}} = \frac{1}{n}\sum_{i=1}^n f(X_i), 
+\{\Delta_i\}~\text{i.i.d.}
+\\
+X_{n+1} &= X_n + \Delta_{n+1} 
+,
 \quad
-X_i \stackrel{iid}{\sim} f
+X_0 = 0
 .
-$$
-
-It is obvious that both $\hat{I}_{\text{imp}}$ and $\hat{I}_{\text{naive}}$ are  unbiased estimators of $I$.
-
-The variance of $\hat{I}_{\text{imp}}$ is smaller than that of $\hat{I}_{\text{naive}}$ if and only if
-$$
-    E_h\left[\left(\frac{g(X)f(X)}{h(X)}\right)^2\right] \le E_f[g^2(X)]
-$$
-or
-$$
-    \int_{-\infty}^{\infty}\left(\frac{g(x)f(x)}{h(x)}\right)^2 h(x)dx
-    \le 
-    \int_{-\infty}^{\infty}g^2(x) f(x) dx
-$$
-
-First note that
-\begin{align*}
-    \left(\int_{-\infty}^{\infty}|g(x)|f(x)dx\right)^2 
-    &=
-    \left(\int_{-\infty}^{\infty} \frac{|g(x)|f(x)}{\sqrt{h(x)}}\sqrt{h(x)}dx \right)^2 \\
-    &\le
-    \int_{-\infty}^{\infty} \frac{g^2(x)f^2(x)}{h(x)} dx \int_{-\infty}^{\infty}h(x)dx \\
-    &=
-    \int_{-\infty}^{\infty} \left(\frac{g(x)f(x)}{h(x)}\right)^2h(x) dx \cdot (1) \\
-    &= E\left[\left(\frac{g(X)f(X)}{h(X)}\right)^2\right]
-    ,
 \end{align*}
-where the inequality is Cauchy-Schwarz. Equality holds if and only if $\frac{|g(x)|f(x)}{\sqrt{h(x)}}= c\sqrt{h(x)}$ for some $c > 0$ for all $x$, i.e., $h(x) \propto |g(x)|f(x)$.
+$$
 
-So if we choose $h(x) = \frac{|g(x)|f(x)}{\int |g(u)|f(u)du}$, then
+-   $P_{i,i+1} = p$, $P_{i,i-1} = 1 - p$, $S = \mathbb{N}$.
+
+#### Example 2. Gambler's ruin
+
+-   $N$: casino's wealth. $S = \{1, 2 \dotsc, N\}$ (gambler's wealth)
+-   $P_{00} = 1$ (gambler's ruin); $P_{NN} = 1$ (casino's ruin)
+-   $P_{i,i+1} = p$, $P_{i,i-1} = 1-p$.
+
+### Chapman-Kolmogorov equation
+
+-   For a time-homogeneous Markov chain, let $P^{(n)} = (P_{ij}^{(n)})$, $P_{ij}^{(n)} = \Pr(X_{m+n}=j \mid X_m = i)$.
+-   Then, $P^{(m+n)} = P^{(m)} P^{(n)}$.
+-   So $P^{(n)} = P^n$.
+
+### Communication classes
+
+-   $i \rightarrow j$ (reachable) if $P_{ij}^{(n)} > 0$ for some $n \geq 0$.
+-   $j \rightarrow i$ if $P_{ji}^{(n)}$ for some $n \geq 0$.
+-   $j \leftrightarrow i$ (communicates) if and only if $i \rightarrow j$ and $j \rightarrow i$.
+
+-   $S$ is partitioned by communication classes
+
+-   A Markov chain is called **irreducible** if it has only one communication class, i.e., all states communicates.
+
+#### Example
+
+-   Random walk: $S = \mathbb{N}$, irreducible.
+-   Gambler's ruin: $S = \{0\} \cup \{1, \dotsc, N-1\} \cup \{N\}$.
+
+
+### Limiting distributions of a Markov chain
+
+::: {.callout-note}
+
+Q: Will there be $\pi_j$'s such that $\lim_{n\to\infty} P_{ij}^{(n)} = \pi_j$, $\forall i \in S$, $\sum_{j\in S}\pi_j = 1$?
+
+:::
+
+If the chain converges to an equillibrium, then $\lim_{n\to\infty} P_{ij}^{(n)}$ should exist and be independent of of the starting state.
+
+-   Stationary distribution: $\pi = (\pi_j)_{j\in S}$ such that
+$$
+    \pi = \pi P, \quad \mathbf{1}^\top \pi = 1, \quad \pi \geq 0.
+$$
+    +   If $\pi^{(0)} = \pi$, then $\pi^{(1)} = \pi^{(0)}P = \pi$, $\pi^{(2)} = \pi^{(1)}P = \pi$, ...
+    +   Also called the invariant distribution.
+    +   If $P_{ij}^{(n)} = (P^n)_{ij} \to \pi_j$, then 
+$$
 \begin{align*}
-    \int_{-\infty}^{\infty}\left(\frac{g(x)f(x)}{h(x)}\right)^2 h(x)dx
-    &=
-    \left(\int_{-\infty}^{\infty}|g(x)|f(x)dx\right)^2 \\
-    &\le
-    \int_{-\infty}^{\infty} g^2(x)f(x)dx \int_{-\infty}^{\infty}f(x)dx \\
+    \pi &= \lim_{n\to\infty} (P^{n+1})_{i\cdot} = \lim_{n\to\infty} (P^n P)_{i\cdot} 
+    \\
     &= 
-    \int_{-\infty}^{\infty} g^2(x)f(x)dx
-    .
+    \sum_{j\in S}(\lim_{n\to\infty}(P^n)_{ij}) P_{j\cdot} = \sum_{j\in S} \pi_j P_{j\cdot} = \pi P.
 \end{align*}
-The middle inequality is again Cauchy-Schwarz. Equality holds if and only if $|g(x)|\sqrt{f(x)} = c\sqrt{f(x)}$ for some $c \ge 0$, or $|g(x)|$ is constant.
-
-
-* The minimum variance of $\hat{I}_{\text{imp}}$ is $\frac{1}{n}[(E_f|g(X)|)^2 - I^2]$.
-    - If $g$ is nonnegative, then the variance can be zero!
-
-* However, $\int |g(u)|f(u)du$ is unknown.
-
-* The above argument tells us that if we choose $h(x)$ close to be proportional to $|g(x)|f(x)$, then the variance is strictly reduced. <!--unless $g(x)$ is uninteresting.-->
-
-#### Example: normal probability
-
-Suppose we want to estimate the tail probability of standard normal:
 $$
-\pi(c) = \int_c^{\infty}\phi(x)dx = 1 - \Phi(c) = \Phi(-c),
-$$
-where $\phi(x) = \frac{1}{\sqrt{2\pi}}e^{-x^2/x}$ and $\Phi$ is the cdf of standard normal.
+        Thus the limiting distribution is a stationary distribution.
+    +   Will the stationary disbution uniquely exist?
 
-1. Naive MC
 
-We can write this probability as 
+-   Long-run proportion of time that a Markov chain stays at state $j$
 $$
-    \pi(c) = \int_{-\infty}^{\infty}\mathbb{I}_{\{x > c\}}\phi(x)dx.
+    \lim_{n\to\infty} \frac{1}{n}\sum_{k=1}^n I\{X_k = j\}
 $$
+    +   Does this limit exists? If so, will it coincides with $\pi$?
 
+#### Characteristics of Markov chains
+
+-   A *period* of a Markov chain is
 $$
-    \hat{\pi}_{\text{naive}}(c) = \frac{1}{n}\sum_{i=1}^n \mathbb{I}_{\{Z_i > c\}},
-    \quad
-    Z_i \stackrel{iid}{\sim} N(0, 1)
+    d(j) \triangleq GCD\{n: P_{jj}^{n} > 0\}
     .
 $$
-Obviously, $E[\hat{\pi}_{\text{naive}}(c)] = \pi(c)$ and $\text{Var}[\hat{\pi}_{\text{naive}}(c)] = \frac{1}{n}\pi(c)( 1 - \pi(c))$.
+    +   A Markov chain is **aperiodic** if $d(i) = 1$ for all $i \in S$;
 
-2. Importance sampling
-
-We can alternatively write the probability $\pi(c)$ as 
+-   Recurrence
+    +   First return time to state $i$
 $$
-    \pi(c) = \int_{-\infty}^{\infty}\mathbb{I}_{\{x > c\}}\frac{\phi(x)}{\phi(x-c)}\phi(x-c)dx
-    = \int_{-\infty}^{\infty}\mathbb{I}_{\{x > c\}}\exp\left(-cx + \frac{1}{2}c^2\right)\phi(x-c)dx
+        \tau_{ii} = \begin{cases} \min\{n \geq 1: X_n = i, X_0 = i\}, & ~ \\ \infty, \text{if}~X_n \neq i, \forall n > 0. \end{cases}
 $$
-Hence
-\begin{align*}
-    \hat{\pi}_{\text{imp}}(c) &= \frac{e^{c^2/2}}{n}\sum_{i=1}^n \mathbb{I}_{\{X_i > c\}}\exp(-cX_i),
-    \quad
-    X_i \stackrel{iid}{\sim} N(c, 1) \\
-    &= \frac{e^{c^2/2}}{n}\sum_{i=1}^n \mathbb{I}_{\{Z_i > 0\}}\exp(-c[Z_i + c]),
-    \quad
-    Z_i \stackrel{iid}{\sim} N(0, 1) \\
-    .
-\end{align*}
+    +   State $i$ is
+        +   *recurrent* if $\tau_{ii} < \infty$ with probability 1. (e.g., symmetric random walk) --- the chain returns to state $i$ infinitely often.
+            +   **positive recurrent** if $\operatorname{E}[\tau_{ii}] < \infty$;
+            +   null recurrent if $\operatorname{E}[\tau_{ii}] = \infty$.
+        +   *transient* otherwise. (e.g., asymmetric random walk)
+    +   If $i \leftrightarrow j$, then $i$ and $j$ are either recurrent or transient at the same time --- recurrence is the communication class property.
+    +   For a communication class $C$, all states in $C$ are either transient, positive recurrent, or  null recurrent.
 
-It is clear $E[\hat{\pi}_{\text{imp}}(c)] = \pi(c)$. To evaluate the variance, note that $\hat{\pi}_{\text{imp}}(c) = \frac{1}{n}\sum_{i=1}^n e^{c^2/2}Y_i$, where $Y_i \stackrel{d}{=} \mathbb{I}_{\{X > c\}}\exp(-cX)$ for $X \sim N(c,1)$.
-Hence
-\begin{align*}
-    E[Y_i^2] = E[\mathbb{I}_{\{X > c\}}\exp(-2cX)]
-    &= \int_c^{\infty}\exp(-2cx)\phi(x-c)dx \\
-    &= \int_c^{\infty}\exp(-2cx)\frac{1}{\sqrt{2\pi}}\exp\left(-\frac{1}{2}(x-c)^2\right)dx \\
-    &= \int_c^{\infty}\frac{1}{\sqrt{2\pi}}\exp\left(-\frac{1}{2}(x+c)^2\right)dx \\
-    &= \int_{2c}^{\infty}\frac{1}{\sqrt{2\pi}}\exp\left(-\frac{1}{2}z^2\right)dz \\
-    &= 1 - \Phi(2c) = \Phi(-2c).
-\end{align*}
-Therefore,
+-   Ergodicity: a Markov chain is **ergodic** if it is aperiodic and positive recurrent.
+    +   In a *finite state-space*, irreducible Markov chain, all states are positive recurrent --- aperiodic + irreducible = ergodic.
+
+#### Limit Theorems
+
+1.  If a Markov chain is irreducible and ergodic, then
+    a.  the limit $\lim_{n\to\infty} P_{ij}^{(n)} = \pi_j$ exists, *independent of* $i$;
+    b.  $\pi = (\pi_j)_{j\in S}$ **uniquely** satisfies $\pi = \pi P$, $\mathbf{1}^\top \pi = 1$, $\pi \geq 0$;
+    c.  $\pi_j = \lim_{n\to\infty}\frac{1}{n}\sum_{k=1}^n I\{X_k=j \mid X_0=i\} = 1/\operatorname{E}[\tau_{jj}]$.
+
+2.  For an irreducible, aperiodic Markov chain, if there is a solution to the equation $\pi = \pi P$, $\mathbf{1}^\top \pi = 1$, $\pi \geq 0$;
+then $\lim_{n\to\infty} P_{ij}^{(n)} = \pi_j$, and the chain is positive recurrent.
+
+
+#### Ergodic Theorem 
+
+-   Let $\{X_n\}$ be a irreducible, ergodic Markov chain whose stationary distribution is $\pi$. Then,
+for any function $g$ such that $\operatorname{E}_{\pi}[|g(X)|] < \infty$ where $X \sim \pi$, we have
 $$
-    \text{Var}[\hat{\pi}_{\text{imp}}(c)] = \frac{1}{n}\left(e^{c^2}\Phi(-2c) - [\pi(c)]^2\right).
+    \frac{1}{n}\sum_{k=1}^n g(X_k) \stackrel{n\to\infty}{\to} \operatorname{E}_{\pi}[g(X)]
 $$
+with probabilty 1.
 
-```{r}
-#| output-fold: true
-#| jupyter: {outputs_hidden: true}
-set.seed(2020)
-nsamp <- 3000
+-   The ergodic theorem extends the strong law of large numbers from i.i.d. sequences to Markov chains.
+-   Thus we can extend Monte Clarlo integration to Markov (non-i.i.d.) seqeunces --- Markov chain Monte Carlo (MCMC)
 
-z <- rnorm(nsamp)   # standard normal sample
+#### MCMC sampling strategy
 
-cvals <- seq(3.0, 7.0, by=0.1)
-nsim <- length(cvals)
+-   Construct an irreducible, aperiodic, and positive recurrent Markov chain for which the stationary distribution equals the target distribution $f$.
 
-naiveMC <- numeric(nsim)
-naiveSD <- numeric(nsim)
-impMC <- numeric(nsim)
-impSD <- numeric(nsim)
-varratio <- numeric(nsim)
+-   From these samples, expectations of functions of random variable $X \sim f$ can be reliably estimated.
 
-truepi <- pnorm(-cvals)  # true values
-for (k in seq_along(cvals)) {
-    cval <- cvals[k]
-    indic <- (z > cval)
-    naiveMC[k] <- mean(indic)
-    naiveSD[k] <- sd(indic) / sqrt(nsim)
-    indic2 <- exp(0.5 * cval^2 ) * (z > 0) * exp(-cval * (z + cval))
-    impMC[k] <- mean(indic2)
-    impSD[k] <- sd(indic2) / sqrt(nsim)
-    varratio <- (impSD[k] / naiveSD[k])^2
-}
+#### Detailed balance condition
 
-RVdata <- data.frame(cvals, truepi, naiveMC, impMC, varratio)
-ggplot(RVdata, aes(x = cvals, y = truepi)) +
-    geom_line(col = "black", linetype = 3, lwd = 1.2) +
-    geom_line(aes(x = cvals, y = naiveMC), col = "red", linetype = 1, lwd = 1) +
-    geom_line(aes(x = cvals, y = impMC), col = "green", linetype = 2, lwd = 1) +
-    ylim(0, 0.001) +
-    xlab("c") + ylab("MC estimate")
-```
-
-```{r}
-#| output-fold: true
-#| jupyter: {outputs_hidden: true}
-ggplot(RVdata) + 
-    geom_line(aes(x = cvals, y = naiveSD), col = "red", linetype = 1, lwd = 1) +
-    geom_line(aes(x = cvals, y = impSD), col = "green", linetype = 2, lwd = 1) +
-    xlab("c") + ylab("Standard Deviation")
-```
-
-### Antithetic variable method
-
-If both $I_1$ and $I_2$ are unbiased estimators of integral $I$, then
+-   If a homogeneous MC satisfies the stronger condition
 $$
-    \text{Var}\left[\frac{I_1 + I_2}{2}\right] 
-    = \frac{1}{4}\text{Var}[I_1] + \frac{1}{4}\text{Var}[I_2] + \frac{1}{2}\text{Cov}(I_1, I_2)
-    .
-$$
-
-If $I_1$ and $I_2$ are negatively correlated, 
-$$
-    \text{Var}\left[\frac{I_1 + I_2}{2}\right] 
-    \le \frac{1}{4}\text{Var}[I_1] + \frac{1}{4}\text{Var}[I_2]
-    .
-$$
-So if we can find pairs of unbiased estimators of the interal, then the variance of the sample mean is these esitmators will be smaller than that of independent estimators.
-
-**Proposition 1**. Suppose $X$ is a random variable and the functions $g_1(x)$ and $g_2(x)$ are both nonincreasing or both nondecreasing in $x$. If the random variables $g_1(X)$ and $g_2(X)$ have finite second moments, then
-$$
-    \text{Cov}(g_1(X), g_2(X)) \ge 0.
-$$
-*Proof*. Consider another random variable $Y$ that is i.i.d. to $X$. By monotonicity,
-$$
-    [g_1(X) - g_1(Y)][g_2(X) - g_2(Y)] \ge 0.
-$$
-Hence, 
-$$
-\begin{split}
-    0 &\le E[g_1(X) - g_1(Y)][g_2(X) - g_2(Y)]  \\
-      &=E[g_1(X)g_2(X)] + E[g_1(Y)g_2(Y)] - E[g_1(X)]E[g_2(Y)] - E[g_1(Y)]E[g_2(X)]  \\
-      &= 2\text{Cov}(g_1(X), g_2(X))
-      .
-\end{split}
-$$
-
-Now suppose we want to evaluate the integral $I = \int_{-\infty}^{\infty}g(x)f(x)dx$ for $g(x)$ increasing and $f(x)$ be a density with cdf $F(x)$. If $X \sim F$, then $g(X)$ is an unbiased estimator of $I$. Such a random variable $X$ can be constructed by the inverse cdf method: for $U \sim \text{unif}(0, 1)$, it follows that $F^{-1}(U) \sim F$, i.e., $I_1 = g(F^{-1}(U))$ is an unbiased estimator of $I$. Likewise, for the same random variable $U$, $I_2 = g(F^{-1}(1-U))$ is an unbiased estimator of $I$. Note that $g(F^{-1}(u))$ is nondecreasing in $u$ and $g(F^{-1}(1-u))$ is nonincreasing in $u$. By Proposition 1, $\text{Cov}(I_1, I_2) \le 0$. It follows that
-$$
-    \hat{I}_{\text{an}} = \frac{1}{2n}\sum_{i=1}^n[g(F^{-1}(U_i) + g(F^{-1}(1-U_i)],
-    \quad
-    U_1, \dotsc, U_n \stackrel{iid}{\sim} \text{unif}(0,1) 
-$$
-has smaller variance than the naïve MC with  the same sample size
-$$
-    \hat{I}_{\text{naive}} = \frac{1}{n}\sum_{i=1}^{n}g(F^{-1}(U_i))
-    .
-$$
-
-Another way to obtain antithetic variables is to exploit symmetry. If $f$ is symmeric around the point $\mu$, then $X - \mu \stackrel{d}{=} \mu - X$, or $2\mu - X \stackrel{d}{=} X$. Therefore, we can use $I_1 = g(X_i)$ and $I_2 = g(2\mu - X_i)$ for $X_i \stackrel{iid}{\sim} F$.
-
-#### Example: exponential integral
-
-$$
-    I = \int_0^1 e^u du = e - 1 \approx 1.71828
-$$
-
-1. Naïve MC
-$$
-    \hat{I}_{\text{naive}} = \frac{1}{n}\sum_{i=1}^n \exp(U_i), \quad
-    U_i \stackrel{iid}{\sim} \text{unif}(0, 1)
-    .
-$$
-We have
-\begin{align*}
-    E[\hat{I}_{\text{naive}}] &= E[e^{U}] = I \\
-    \text{Var}[\hat{I}_{\text{naive}}] &= \frac{1}{n}\text{Var}[e^U] = \frac{1}{n}\left(\frac{e^2-1}{2} - (e-1)^2\right) \approx \frac{0.2420}{n}.
-\end{align*}
-
-2. Antithetic MC
-$$
-    \hat{I}_{\text{an}} = \frac{1}{2n}\sum_{i=1}^n [\exp(U_i) + \exp(1 - U_i)], \quad
-    U_i \stackrel{iid}{\sim} \text{unif}(0, 1)
-    .
-$$
-
-We have 
-\begin{align*}
-    E[\hat{I}_{\text{as}}] &= \frac{1}{2}(E[e^U] + E[e^{1-U}]) = I \\
-    \text{Var}[\hat{I}_{\text{as}}] &= \frac{1}{n}\text{Var}\left[\frac{e^U + e^{1-U}}{2}\right] = \frac{1}{n}\frac{\text{Var}[e^U] + \text{Var}[e^{1-U}] + 2\text{Cov}(e^U, e^{1-U})}{4} \\
-    &= \frac{1}{4n}(e^2 - 1 - 2(e-1)^2 +  2(e - (e-1)^2) \\
-    &\approx \frac{0.0039}{n}.
-\end{align*}
-
-
-```{r}
-#| output-fold: true
-#| jupyter: {outputs_hidden: true}
-cummean <- function (x) cumsum(x) / seq_along(x)  # cumulative mean
-cumvar <- function (x, sd = FALSE) {  # cumulative variance or sd
-  x <- x - x[sample.int(length(x), 1)]  
-  n <- seq_along(x)
-  v <- (cumsum(x ^ 2) - cumsum(x) ^ 2 / n) / (n - 1)
-  if (sd) v <- sqrt(v)
-  v
-}
-
-set.seed(2020)
-
-nsamp <- 3000
-
-u <- runif(nsamp)   # uniform random sample
-
-
-naive <- exp(u)
-naiveMC <- cummean(naive)
-naiveSD <- cumvar(naive, sd = TRUE) / sqrt(seq_along(naive))
-antithetic <- (exp(u) + exp(1 - u)) * 0.5
-antiMC  <- mean(antithetic)
-antiSD  <- cumvar(antithetic, sd = TRUE) / sqrt(seq_along(antithetic))
-varratio <- (antiSD / naiveSD)^2
-
-
-RVdata <- data.frame(nsamp = seq_len(nsamp), naiveMC = naiveMC, 
-                     naiveUpper = naiveMC + 2 * naiveSD, naiveLower = naiveMC - 2 * naiveSD,
-                     antiMC = antiMC,
-                     antiUpper = antiMC + 2 * antiSD, antiLower = antiMC - 2 * antiSD,
-                     varratio = varratio)
-ggplot(RVdata, aes(x = nsamp, y = naiveMC)) +
-    geom_line(col = "red", lwd = 1) +
-    #geom_point(shape = 16, col = "black", lwd = 1.7) +
-    geom_hline(yintercept = exp(1) - 1, col = "dark blue", lwd = 1) +
-    geom_line(aes(x = nsamp, y = naiveUpper), col = "magenta", lwd = 1.2, linetype = 2) +
-    geom_line(aes(x = nsamp, y = naiveLower), col = "magenta", lwd = 1.2, linetype = 2) +
-    ylim(1.5, 2.0) +
-    xlab("Sample Size") + ylab("MC integral") +
-    geom_line(aes(x = nsamp, y = antiMC), col = "cyan", lwd = 1) +
-    #geom_point(shape = 16, col = "black", lwd = 1.7) + 
-    geom_line(aes(x = nsamp, y = antiUpper), col = "green", lwd = 1.2, linetype = 2) + 
-    geom_line(aes(x = nsamp, y = antiLower), col = "green", lwd = 1.2, linetype = 2) 
-```
-
-```{r}
-#| output-fold: true
-#| jupyter: {outputs_hidden: true}
-ggplot(RVdata, aes(x = nsamp, y = varratio)) +
-    geom_point(shape = 16, col = "black", lwd = 1.7) + 
-    geom_line(col = "black", linetype = 1) +
-    ylim(0.01, 0.02) +
-    xlab("Sample Size") + ylab("Variance Ratio")
-```
-
-### Control variable method
-
-In estimating $I = E[f(X)]$, use another random variable $Y$ whose expectation $\mu$ is known. Note that $\hat{I} = f(X) - c(Y - \mu)$ is an unbiased estimator of $I$ for any $c$. Its variance is
-$$
-    \text{Var}[f(X) - c(Y - \mu)] = \text{Var}[f(X)] + c^2\text{Var}[Y] -2c \text{Cov}(f(X), Y)
+    \pi_i P_{ij} = \pi_j P_{ji}
     ,
 $$
-which is minimized by
+then $\pi = (\pi_i)_{i\in S}$ is a stationary distribution of the MC. (Why?)
+
+-   In fact such a Markov chain is reversible because the joint distribution of the chain is the same whether the chain is run forward or backward.
+
+### Extension to continuous state space
+
+-   Continuous-state-space, time-homogeneous MC
 $$
-    c^{\star} = \frac{\text{Cov}(f(X), Y)}{\text{Var}[Y]}
+    P_{ij} \rightarrow K(x, y)
+$$
+where $K(x, y) = P_{X_{n+1}\mid X_n}(y \mid x$ is the *transition density* such that $\int_S K(x, y) dy = 1$.
+
+-   Irreducibility, recurrence, stationary distribution, etc. are defined analogously as the discrete state space case.
+
+-   Detailed balance condition:
+$$
+    \pi(x) K(x, y) = \pi(y) K(y, x)
+    \implies
+    \pi(y) = \int_S \pi(x) K(x, y) dx
+$$
+
+-   Limiting theorems also hold analogously.
+
+## Metropolis-Hastings algorithm
+
+-   Metropolis N, Rosenbluth AW, Rosenbluth MN, Teller AH, Teller E (1953). "Equation of State Calculations by Fast Computing Machines". J. Chem. Phys. 21 (6): 1087.
+
+-   Hastings WK (1970). "Monte Carlo Sampling Methods Using Markov Chains and Their Applications". Biometrika. 57 (1): 97–109.
+
+### The algorithm
+
+For $t= 0, 1, \dotsc$, 
+
+1.  Sample a condidate alue $\tilde{X}$ from a *proposal distribution* $g(\cdot \mid X^{(t)})$.
+
+2.  Compute the Metropolis-Hastings ratio
+$$
+    R(X^{(t)}, \tilde{X}) = \frac{f(\tilde{X})g(X^{(t)}\mid \tilde{X})}{f(X^{(t)})g(\tilde{X}\mid X{^(t)})}
     .
 $$
-and the minimum variance is
+
+3.  Sample a value for $X^{(t+1)}$ such that
 $$
-    \text{Var}[f(X) - c^{\star}(Y - \mu)] = \text{Var}[f(X)] -\frac{\text{Cov}(f(X), Y)^2}{\text{Var}[Y]}
+    X^{(t+1)} = \begin{cases} \tilde{X}, & \text{w.p.}~\min\{R(X^{(t)}, \tilde{X}), 1\},
+        \\
+        X^{(t)}, & \text{otherwise}. 
+    \end{cases}
+$$
+    +   $\alpha(X^{(t)}, \tilde{X}) = \min\{R(X^{(t)}, \tilde{X}), 1\}$ is the acceptance probability of the proposal.
+
+**Note**. The MH ratio $R(X^{(t)}, \tilde{X})$ is well-defined for each $t$ if we draw $X^{(0)}$ from some starting distribution, with requirement $f(X^{(0)}) > 0$.
+
+-   Metripolis (1953): $g(u \mid v) = g(v \mid v)$ (symmetric)
+
+### Stationary distribution
+
+-   Transition probability kernel
+$$
+    K(x, y) = \alpha(x, y)g(y\mid x) + (1 - r(x))\delta(y - x)
+$$
+where
+$$
+    \alpha(x, y) = \min\left\{1, \frac{f(y)g(x\mid y)}{f(x)g(y\mid x)}\right\}
+    ,
+    \quad
+    r(x) = \int \alpha(x, y) g(x \mid y) dv
+$$
+and the $\delta$ is the Dirac delta function.
+
+![Metropolis-Hastings kernel ($x$ fixed)](images/MHkernel.png)
+
+-   Note
+    a.  $f(x)\alpha(x, y)g(y\mid x) = \min\{f(x)g(y \mid x), f(y)g(x \mid y)\} = f(y)\alpha(y, x)g(x \mid y)$;
+    b.  $f(x)(1 - r(x))\delta(y - x) = f(y)(1 - r(y))\delta(x - y)$ by the property of Dirac delta.
+
+-   It follows $f(x)K(x, y) = f(y)K(y, x)$, the detailed balance equation.
+
+-   Therefore $f$ is the stationary distribution of this MC.
+
+-   Irreducibility, aperiodicity, positive recurrence of this MC depends on $g(\cdot\mid\cdot)$ and the user must check.
+
+-   Aperiodicity usually holds since $\Pr(X^{(t+1)} = X^{(t)}) > 0$ (rejection probability).
+
+-   Irreducibility holds if $f(x) > 0$ for all $x \in S$ and the chain defined by the kernal $\tilde{K}(x, y) = g(y|x)$ is irreducible.
+
+#### Example: discrete Metropolis
+
+-   For each state $i$, assume that $g(i, i) > 0$ and there exists a neighboring state $j$ ($g(j\mid i) > 0$) such that $f(i) > f(j)$. Then
+$$
+    \alpha(i, j) = \min\{ f(j)/f(i), 1\} < 1
     .
 $$
-
-Thus if $f(X)$ and $Y$ are strongly correlated, then the variance reduces greatly.
-
-The random variable $Y$ is called the control variable.
-
-#### Example: exponential integral
-
+Thus
 $$
-    I = \int_0^1 e^u du = e - 1 \approx 1.71828
+    r(i) = \sum_{j'}\alpha(i, j')g(j'\mid i) < \sum_{j'} g(j'\mid i) = 1
 $$
+and $K(i, i) = \alpha(i, i)g(i, i) + 1 - r(i) > 0$.
 
-1. Naïve MC
+-   Therefore $d(i) = 1$.
+
+
+```{r}
+MH_sampler <- function(target_log_density, proposal,
+                       N = 10000, burn_in = 1000, 
+                       thin = 1 ) {
+  theta <- numeric(N)
+  theta[1] <- 0 # initialize
+  acc <- 0L # accepted?
+
+  for (t in 2:N) {
+    current <- theta[t - 1]
+    theta_tilde <- proposal$sample(1)
+
+    # log acceptance ratio:
+    log_alpha <- target_log_density(theta_tilde) +
+      proposal$log_density(current, theta_tilde) -
+      target_log_density(current) -
+      proposal$log_density(theta_tilde, current)
+
+    if (log(runif(1)) < min(0, log_alpha)) {
+      theta[t] <- theta_tilde
+      acc <- acc + 1L
+    } else {
+      theta[t] <- current
+    }
+  }
+
+  # Thin and discard burn-in (more on this later)
+  list(
+    theta = theta[seq(from = burn_in + 1, to = N, by = thin)],
+    theta_all = theta,
+    acceptance_rate = acc / (N - 1),
+    target_log_density = target_log_density
+  )
+}
+```
+
+#### Example: posterior sampling
+
+-   Goal: We want to sample from the posterior density $p_{\Theta\mid Y}(\theta \mid y)$, with $p_{\Theta}(\theta)$ a prior. 
+
+-   Difficulty: $p_{\Theta\mid Y}(\theta \mid y) = c p_{Y\mid\Theta}(y\mid \theta)p_{\Theta}(\theta)$, $c > 0$ unknown.
+
+-   Solution: Metropolis-Hastings MCMC
+    +   Target distribution: $f(\cdot) = p_{\Theta\mid Y}(\cdot \mid y)$
+    +   M-H ratio
 $$
-    \hat{I}_{\text{naive}} = \frac{1}{n}\sum_{i=1}^n \exp(U_i), \quad
-    U_i \stackrel{iid}{\sim} \text{unif}(0, 1)
-    .
-$$
-We have
 \begin{align*}
-    E[\hat{I}_{\text{naive}}] &= E[e^{U}] = I \\
-    \text{Var}[\hat{I}_{\text{naive}}] &= \frac{1}{n}\text{Var}[e^U] = \frac{1}{n}\left(\frac{e^2-1}{2} - (e-1)^2\right) \approx \frac{0.2420}{n}.
+    R(\theta^{(t)}, \tilde{\theta})
+    &=
+    \frac{f(\tilde{\theta})g(\theta^{(t)} \mid \tilde{\theta})}{f(\theta^{(t)})g(\tilde{\theta} \mid \theta^{(t)})}
+    =
+    \frac{p_{\Theta\mid Y}(\tilde{\theta}\mid y)g(\theta^{(t)}\mid \tilde{\theta})}{p_{\Theta\mid Y}(\theta^{(t)}\mid y)g(\tilde{\theta}\mid \theta^{(t)})}
+    \\
+    &=
+    \frac{c p_{Y\mid\Theta}(y\mid \tilde{\theta})p_{\Theta}(\tilde{\theta})g(\theta^{(t)}\mid\tilde{\theta})}{c p_{Y\mid\Theta}(y\mid \theta^{(t)})p_{\Theta}(\theta^{(t)})g(\tilde{\theta}\mid\theta^{(t)})}
+    =
+    \frac{p_{Y\mid\Theta}(y\mid \tilde{\theta})p_{\Theta}(\tilde{\theta})g(\theta^{(t)}\mid\tilde{\theta})}{p_{Y\mid\Theta}(y\mid \theta^{(t)})p_{\Theta}(\theta^{(t)})g(\tilde{\theta}\mid\theta^{(t)})}
 \end{align*}
+$$
+which is independent of $c$!
 
-2. Antithetic MC
+-   Independent chain: $g(\cdot, *) = p_{\Theta}(\cdot)$
+    +   M-H ratio
 $$
-    \hat{I}_{\text{an}} = \frac{1}{2n}\sum_{i=1}^n [\exp(U_i) + \exp(1 - U_i)], \quad
-    U_i \stackrel{iid}{\sim} \text{unif}(0, 1)
-    .
-$$
-We have 
 \begin{align*}
-    E[\hat{I}_{\text{as}}] &= \frac{1}{2}(E[e^U] + E[e^{1-U}]) = I \\
-    \text{Var}[\hat{I}_{\text{as}}] &= \frac{1}{n}\text{Var}\left[\frac{e^U + e^{1-U}}{2}\right] = \frac{1}{n}\frac{\text{Var}[e^U] + \text{Var}[e^{1-U}] + 2\text{Cov}(e^U, e^{1-U})}{4} \\
-    &= \frac{1}{4n}(e^2 - 1 - 2(e-1)^2 +  2(e - (e-1)^2) \\
-    &\approx \frac{0.0039}{n}.
+    R(\theta^{(t)}, \tilde{\theta})
+    &=
+    \frac{p_{Y\mid\Theta}(y\mid \tilde{\theta})p_{\Theta}(\tilde{\theta})g(\theta^{(t)}\mid\tilde{\theta})}{p_{Y\mid\Theta}(y\mid \theta^{(t)})p_{\Theta}(\theta^{(t)})g(\tilde{\theta}\mid\theta^{(t)})}
+    =
+    \frac{p_{Y\mid\Theta}(y\mid \tilde{\theta})p_{\Theta}(\tilde{\theta})p_{\Theta}(\theta^{(t)})}{p_{Y\mid\Theta}(y\mid \theta^{(t)})p_{\Theta}(\theta^{(t)})p_{\Theta}(\tilde{\theta})}
+    \\
+    &=
+    \frac{p_{Y\mid\Theta}(y\mid \tilde{\theta})}{p_{Y\mid\Theta}(y\mid \theta^{(t)})}
 \end{align*}
+$$
+only depends on the likelihood.
+
+#### Example: Binomial-logit mixture
+
+Suppose $x$ is a random sample from a Binomial distribution with $n$ trials and success probability $p=\frac{e^{\theta}}{1 + e^{\theta}}$.
+Suppose the prior on $\theta$ is $N(0, \sigma^2)$. 
+
+* Prior density: $f_{\Theta}(\theta) = \frac{1}{\sqrt{2\pi\sigma^2}}e^{-\theta^2/(2\sigma^2)}$.
+* Likelihood: $f_{X|\Theta}(x|\theta) = \binom{n}{x}p^x(1 - p)^{n-x}$, with
+$p=\frac{e^{\theta}}{1 + e^{\theta}}$.
+* Posterior density:
+$$
+\begin{align*}
+    f_{\Theta|X}(\theta|x) &= \frac{f_{X|\Theta}(x | \theta)f_{\Theta}(\theta)}{\int_{-\infty}^{\infty}f_{X|\Theta}(x | \theta')f_{\Theta}(\theta')d\theta'}
+    = \frac{p(\theta)^x[1-p(\theta)]^{n-x}e^{-\theta^2/(2\sigma^2)}}{\int_{-\infty}^{\infty}p(\theta)^x[1-p(\theta)]^{n-x}e^{-\theta^2/(2\sigma^2)}d\theta}
+    \\
+    &= \frac{e^{\theta x}[1+e^{\theta}]^{-n}e^{-\theta^2/(2\sigma^2)}}{\int_{-\infty}^{\infty}e^{\theta x}[1+e^{\theta}]^{-n}e^{-\theta^2/(2\sigma^2)}d\theta}
+\end{align*}
+$$
+
+```{r}
+log_binom_logit_posterior <- function(x, n, sigma) {
+  function(theta) {
+    p <- plogis(theta)  # numerically stable logistic transform
+    dbinom(x, size = n, prob = p, log = TRUE) +
+        dnorm(theta, mean = 0, sd = sigma, log = TRUE)
+  }
+}
+independent_normal_proposal <- function(prop_mean = 0, 
+                                        prop_sd = 1) {
+  list(
+    sample = function(n) { rnorm(n, mean = prop_mean, 
+                                 sd = prop_sd) },
+    log_density = function(theta, phi) { # discard 2nd arg
+        dnorm(theta, mean = prop_mean, sd = prop_sd, 
+              log = TRUE)
+    }
+   )
+}
+plot_posterior <- function(posterior_df, target_log_density) {
+  # Create a grid of theta values
+  theta_grid <- seq(min(posterior_df$theta) - 1,
+                    max(posterior_df$theta) + 1,
+                    length.out = 1000)
+  # Unnormalized posterior
+  log_post <- target_log_density(theta_grid)
+  post <- exp(log_post - max(log_post)) # to avoid overflow
+
+  posterior_curve <- data.frame(theta = theta_grid, 
+                                density = post)
+
+  # Normalize numerically
+  dx <- theta_grid[2] - theta_grid[1]
+  posterior_curve$density <- posterior_curve$density /
+    sum(posterior_curve$density * dx)
+
+  # Plot MCMC histogram against posterior curve
+  ggplot() +
+  geom_histogram(data = posterior_df,
+    aes(x = theta, y = after_stat(density)),
+    bins = 40, fill = "skyblue",
+    color = "black", alpha = 0.5
+  ) +
+  geom_line(data = posterior_curve,
+    aes(x = theta, density), color = "red",
+    linewidth = 1.2
+  ) +
+  labs(
+    title = "Independent MH Samples vs. Posterior Density",
+    x = expression(theta),
+    y = "Density"
+  ) +
+  theme_minimal(base_size = 14)
+}
+```
+
+```{r}
+set.seed(2020)
+sigma <- 10
+my_prop <- independent_normal_proposal(prop_sd = sigma)
+my_target1 <- log_binom_logit_posterior(x = 18, n = 20, sigma = sigma)
+fit1 <- MH_sampler(target_log_density = my_target1,
+  proposal = my_prop, N = 20000, burn_in = 2000,
+  thin = 5)
+posterior_df1 <- data.frame(theta = fit1$theta)
+cat("Acceptance rate = ", fit1$acceptance_rate, ", Sample size = ", length(fit1$theta), "\n")
+my_target2 <- log_binom_logit_posterior(x = 180, n = 200, sigma = sigma)
+fit2 <- MH_sampler(target_log_density = my_target2,
+  proposal = my_prop, N = 20000, burn_in = 2000,
+  thin = 5)
+posterior_df2 <- data.frame(theta = fit2$theta)
+cat("Acceptance rate = ", fit2$acceptance_rate, ", Sample size = ", length(fit2$theta), "\n")
+```
+
+```{r}
+plot_posterior(posterior_df1, target_log_density = my_target1)
+plot_posterior(posterior_df2, target_log_density = my_target2)
+```
 
 
-3. Control variable MC
-    - Use $U$ for a control variable.
-$$    
-    \text{Cov}(e^U, U) = E[Ue^U] - E[U]E[e^U] = \int_0^1 ue^u du - \frac{1}{2}(e - 1) = \frac{1}{2}(3 - e)
-    \approx 0.14086
+## Gibbs sampler
+
+-   For a multidimensional target distribution with a Cartesian product state space, *sequentially* sample from univariate conditional distributions, which is often of closed form.
+
+-   Let $X = (X_1, \dotsc, X_p)$ and $X_{-i} = (X_1, \dotsc, X_{i-1}, X_{i+1}, \dotsc, X_p)$.
+
+-   Generate
 $$
-Then
+\begin{align*}
+    X_1^{(t+1)} &\sim f_{X_1 \mid X_{-1}}(\cdot \mid X_2^{(t)}, X_3^{(t)}, \dotsc, X_p^{(t)})
+    \\
+    X_2^{(t+1)} &\sim f_{X_2 \mid X_{-2}}(\cdot \mid X_1^{(t+1)}, X_3^{(t)}, \dotsc, X_p^{(t)})
+    \\
+    & \vdots
+    \\
+    X_{p-1}^{(t+1)} &\sim f_{X_{p-1} \mid X_{-(p-1)}}(\cdot \mid X_2^{(t+1)}, \dotsc, X_{p-2}^{(t+1)}, X_p^{(t)})
+    \\
+    X_p^{(t+1)} &\sim f_{X_p \mid X_{-p}}(\cdot \mid X_1^{(t+1)}, X_2^{(t+1)}, \dotsc, X_{p-1}^{(t)})
+\end{align*}
 $$
-    c^{\star} = \frac{\text{Cov}(e^U, U)}{\text{Var}[U]} = \frac{(3 - e)/2}{1/12} \approx 1.6903
+cf. Gauss-Seidel.
+
+#### Example: bivariate normal
+
+-   Target distribution: 
 $$
-and the control variable estimator is
+\begin{pmatrix} X_1 \\ X_2 \end{pmatrix} \sim 
+N\left( \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \begin{pmatrix} 1 & \rho \\ \rho & 1 \end{pmatrix}\right)
 $$
-    \hat{I}_{\text{cv}} = \frac{1}{n}\sum_{i=1}^n\left(\exp(U_i) - c^{\star}(U_i - 1/2)\right)
+
+-   $X_1 \mid \{X_2 = x_2\} \sim N(\rho x_2, 1 - \rho^2)$,
+    $X_2 \mid \{X_1 = x_1\} \sim N(\rho x_1, 1 - \rho^2)$.
+
+-   Therefore, sample $X_1^{(t+1)} \sim N(\rho X_2^{(t)}, 1 - \rho^2)$ and $X_2^{(t+1)} \sim N(\rho X_1^{(t+1)}, 1 - \rho^2)$.
+
+```{r}
+Rgibbs <- function(N, thin, rho=0) {
+  mat <- matrix(0, nrow=N, ncol=2)
+  x <- y <- 0
+  for (i in 1:N) {
+    for (j in 1:thin) {
+      x <- rnorm(1, rho * y, sqrt(1 - rho * rho))
+      y <- rnorm(1, rho * x, sqrt(1 - rho * rho))
+    }
+    mat[i,] <- c(x, y)
+  }
+  df <- as.data.frame(mat)
+  names(df) <- c("x1", "x2")
+  df
+}
+set.seed(2020)
+system.time(gibbssamp <- Rgibbs(10000, 500, rho = 0.5))
+```
+
+```{r}
+ggplot(gibbssamp, aes(x=x1, y=x2)) + geom_point(size = 1, alpha=0.2) + 
+geom_density2d() + theme_minimal() + theme(aspect.ratio = 1) 
+```
+
+### Relation with Metropolis-Hastings
+
+-   At time $t+1$ and for cooridnate $i$, we sample
 $$
-with variance
-$$
-    \text{Var}[\hat{I}_{\text{cv}}] = \frac{1}{n}\text{Var}[e^U - c^{\star}(U - 1/2)]
+    \tilde{x}_i \sim f_{X_{i} \mid X_{-i}}(\cdot \mid x_{-i}^{(t)})
     ,
 $$
 where
-\begin{align*}
-\text{Var}[e^U - c^{\star}(U - 1/2)] &= \text{Var}[e^U] -\frac{\text{Cov}(e^U, U)^2}{\text{Var}[Y]} \\
-&= \frac{4e - 3 - e^2}{2} - 12\left(\frac{3-e}{2}\right)^2 
-\approx 0.0039
-.
-\end{align*}
-Therefore
+$x_{-i}^{(t)} = (x_1^{(t+1)}, \dotsc, x_{i-1}^{(t+1)}, x_{i+1}^{(t)}, \dotsc, x_p^{(t)})$.
+
+-   Construct $\tilde{x} = (x_1^{(t+1)}, \dotsc, x_{i-1}^{(t+1)}, \tilde{x}_i, x_{i+1}^{(t)}, \dotsc, x_p^{(t)})$. This is the proposed sample for the target joint $f$.
+
+-   Let $x^{(t)} = (x_1^{(t+1)}, \dotsc, x_{i-1}^{(t+1)}, x_i^{(t)}, x_{i+1}^{(t)}, \dotsc, x_p^{(t)})$. Then we see 
 $$
-    \hat{I}_{\text{cv}} \approx \frac{0.0039}{n}
+\tilde{x}\mid  x^{(t)}
+\sim g_i( \cdot \mid x^{(t)})
+= f_{X_i\mid X_{-i}}(\tilde{x}_i \mid x_{-i}^{(t)})\delta(\tilde{x}_{-i} - x_{-i}^{(t)})
+=
+    \begin{cases}
+        f_{X_i\mid X_{-i}}(\tilde{x}_i \mid x_{-t}^{(i)}), \text{if}~\tilde{x}_{-i} = x_{-i}^{(t)} \\
+        0, \text{otherwise}.
+    \end{cases}
+$$
+So the proposal density is
+$$
+    g_i(x \mid y) = f_{X_{i}\mid X_{-i}}(x_i \mid y_{-i})\delta(x_{-i} - y_{-i})
     .
 $$
 
-If we can choose $c$ well (e.g., by regression), then the variance reduces.
+![Gibbs proposal density](images/Gibbs_proposal.png){width=75%}
 
-```{r}
-#| output-fold: true
-#| jupyter: {outputs_hidden: true}
-# continued from the previous example
+-   M-H ratio:
+$$
+\begin{align*}
+    R(x^{(t)}, \tilde{x})
+    &=
+    \frac{f(\tilde{x})g_i(x^{(t)} \mid \tilde{x})}{f(x^{(t)})g_i(\tilde{x} \mid x^{(t)})}
+    \\
+    &=
+    \frac{%
+    f_{X_{-i}}(\tilde{x}_{-i})f_{X_i\mid X_{-i}}(\tilde{x}_i\mid \tilde{x}_{-i})f_{X_i\mid X_{-i}}(x_i^{(t)}\mid \tilde{x}_{-i})\delta(x_{-i}^{(t)}-\tilde{x}_{-i})%
+    }{%
+    f_{X_{-i}}(x_{-i}^{(t)})f_{X_i\mid X_{-i}}(x_i^{(t)}\mid x_{-i}^{(t)})f_{X_i\mid X_{-i}}(\tilde{x}_i\mid x_{-i}^{(t)})\delta(\tilde{x}_{-i}-x_{-i}^{(t)})%
+    }
+    \\
+    &=
+    \frac{%
+    f_{X_{-i}}(x_{-i}^{(t)})f_{X_i\mid X_{-i}}(\tilde{x}_i\mid x_{-i}^{(t)})f_{X_i\mid X_{-i}}(x_i^{(t)}\mid x_{-i}^{(t)})%
+    }{%
+    f_{X_{-i}}(x_{-i}^{(t)})f_{X_i\mid X_{-i}}(x_i^{(t)}\mid x_{-i}^{(t)})f_{X_i\mid X_{-i}}(\tilde{x}_i\mid x_{-i}^{(t)})
+    }
+    \\
+    &=
+    1
+    ,
+\end{align*}
+$$
+since $\tilde{x}_{-i} = x_{-i}^{(t)}$ with probability 1.
 
-#cstar <- 1.6903
+-   So the Gibbs sampler is a M-H sampler with a *time-varying* proposal distribution, whose proposal is *always accepted*.
 
-cvals <- seq(-0.4, 3.1, by = 0.1)
-nsim <- length(cvals)
 
-ctrlMC <- numeric(nsim)
-ctrlSD <- numeric(nsim)
-varrate <- numeric(nsim)
+#### Example: Ising model
 
-for (k in seq_along(cvals)) {
-    cstar <- cvals[k]
-    ctrl <- exp(u) - cstar * (u - 0.5)
-    ctrlMC[k]  <- mean(ctrl)
-    ctrlSD[k]  <- sd(ctrl) / sqrt(nsamp)
-    varrate[k] <- (ctrlSD[k] / naiveSD[length(naiveSD)])^2
-}
+-   A mathematical model of ferromagnetism in statistical mechanics.
 
-RVdata <- data.frame(c = cvals, 
-                     ctrlMC = ctrlMC,
-                     ctrlUpper = ctrlMC + 2 * ctrlSD, ctrlLower = ctrlMC - 2 * ctrlSD,
-                     varratio = varrate)
-ggplot(RVdata, aes(x = c, y = ctrlMC)) +
-    geom_hline(yintercept = naiveMC[length(naiveMC)], col = "red", lwd = 1) +
-    #geom_point(shape = 16, col = "black", lwd = 1.7) +
-    geom_hline(yintercept = exp(1) - 1, col = "dark blue", lwd = 1) +
-    geom_hline(yintercept = naiveMC[length(naiveMC)] + 2 * naiveSD[length(naiveSD)], col = "magenta", lwd = 1.2, linetype = 2) +
-    geom_hline(yintercept = naiveMC[length(naiveMC)] - 2 * naiveSD[length(naiveSD)], col = "magenta", lwd = 1.2, linetype = 2) +
-    ylim(1.68, 1.76) +
-    xlab("c") + ylab("MC integral") +
-    geom_line(aes(x = c, y = ctrlMC), col = "cyan", lwd = 1) +
-    #geom_point(shape = 16, col = "black", lwd = 1.7) + 
-    geom_line(aes(x = c, y = ctrlUpper), col = "green", lwd = 1.2, linetype = 2) + 
-    geom_line(aes(x = c, y = ctrlLower), col = "green", lwd = 1.2, linetype = 2) 
-```
+-   $p$ elementary particles equally spaced around the boundary of the unit circle (periodic boundary condition)
 
-```{r}
-#| output-fold: true
-#| jupyter: {outputs_hidden: true}
-ggplot(RVdata, aes(x = c, y = varratio)) +
-    geom_hline(yintercept = 1.0, col = "red", lwd = 1) +
-    geom_point(shape = 16, col = "black", lwd = 1.7) + 
-    geom_line(col = "black", linetype = 1) +
-    ylim(0.0, 2.0) +
-    xlab("c") + ylab("Variance Ratio")
-```
+-   Each particle $i$ can have a state 
+$$
+    x_i = \begin{cases} 1, &\text{spin up} \\
+        -1, &\text{spin down}
+    \end{cases}
+$$
+($x_{p+1} = x_1$).
+
+-   The Gibbs distribution of the state of the system $x = (x_1, \dotsc, x_p)$: 
+$p(x) = \frac{1}{Z} \exp\left(\beta\sum_{j=1}^p x_j x_{j+1}\right)$, $\beta > 0$.
+    +   States like $(1, 1, \dotsc, 1)$ is favored over $(1, -1, 1, \dotsc, 1, -1, 1)$.
+
+-   Normalizing constant 
+$Z = \sum_{x_1=-1}^1\sum_{x_2=-1}^1\dotsb\sum_{x_p=-1}^1 \exp\left(\beta\sum_{j=1}^p x_j x_{j+1}\right)$, sum of $2^p$ terms.
+
+-   Gibbs sampling: choose component $i$ and sample
+$$
+    x_i^{(t+1)} = 
+    \begin{cases}
+    -x_i^{(t)}, &
+    \text{w.p.}~
+    \frac{\exp(\beta(-x_{i-1}x_i - x_ix_{i+1}))}{\exp(\beta(x_{i-1}x_i+x_ix_{i+1}))+\exp(\beta(-x_{i-1}x_i - x_ix_{i+1}))}
+    =
+    \frac{1}{1 + \exp(2\beta(x_{i-1}x_i + x_ix_{i+1}))}
+    \\
+    x_i^{(t)}, &
+    \text{w.p.}~
+    \frac{\exp(\beta(x_{i-1}x_i + x_ix_{i+1}))}{\exp(\beta(x_{i-1}x_i+x_ix_{i+1}))+\exp(\beta(-x_{i-1}x_i - x_ix_{i+1}))}
+    =
+    \frac{1}{1 + \exp(-2\beta(x_{i-1}x_i + x_ix_{i+1}))}
+    .
+    \end{cases}
+$$
+(logistic regression)
+
+## Practical considerations
+
+1.  When does the MC reach the stationary state (mixing)? When does one stop?
+
+2.  Usually one discards an initial part of an MCMC sample (burn-in). How many burn-ins should be discarded?
+
+3.  i.i.d. sampling
+    +   Inherently the samples are correlated.
+    +   Ideally, run $N$ parallel chains and thake only the terminal values.
+    +   Subsample to reduce correlation: $Y_m = X_{mk}$ for some batch size $k > 1$ (thinnig)
+
 
 
