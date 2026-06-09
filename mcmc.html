@@ -4278,7 +4278,7 @@ loaded via a namespace (and not attached):
 <section id="definition" class="level3">
 <h3 class="anchored" data-anchor-id="definition">Definition</h3>
 <p>A distcrete time, discrete-state-space Markov chain is a sequence of random variables <span class="math inline">\(\{X_n\}\)</span> where <span class="math inline">\(X_n \subset S \subset \mathbb{N}\)</span> for all <span class="math inline">\(n=0, 1, 2,\dotsc\)</span>, with <span class="math display">\[
-    \Pr(X_{n+1} \mid X_n = i, X_{n-1} = i_{n-1}, \dotsc ) = \Pr(X_{n+1}=i \mid X_n = i) =: P_{ij}(n)
+    \Pr(X_{n+1} = j \mid X_n = i, X_{n-1} = i_{n-1}, \dotsc ) = \Pr(X_{n+1}=j \mid X_n = i) =: P_{ij}(n)
     .
 \]</span> Here, <span class="math inline">\(S\)</span> is called the <em>state space</em>, and <span class="math inline">\(P_{ij}\)</span> is called the (state-) transition probabilty.</p>
 <ul>
@@ -4290,7 +4290,7 @@ loaded via a namespace (and not attached):
 <h4 class="anchored" data-anchor-id="example-1.-simple-random-walk">Example 1. Simple random walk</h4>
 <p><span class="math display">\[
 \begin{align*}
-\Delta_i &amp;= \begin{cases} -1, &amp; \text{w.p.} p \\ -1, &amp; \text{w.p.} 1- p \end{cases}
+\Delta_i &amp;= \begin{cases} +1, &amp; \text{w.p.}~p \\ -1, &amp; \text{w.p.}~1- p \end{cases}
 ,
 \quad
 \{\Delta_i\}~\text{i.i.d.}
@@ -4309,7 +4309,7 @@ X_0 = 0
 <section id="example-2.-gamblers-ruin" class="level4">
 <h4 class="anchored" data-anchor-id="example-2.-gamblers-ruin">Example 2. Gambler’s ruin</h4>
 <ul>
-<li><span class="math inline">\(N\)</span>: casino’s wealth. <span class="math inline">\(S = \{1, 2 \dotsc, N\}\)</span> (gambler’s wealth)</li>
+<li><span class="math inline">\(N\)</span>: casino’s wealth. <span class="math inline">\(S = \{0, 1, 2 \dotsc, N\}\)</span> (gambler’s wealth)</li>
 <li><span class="math inline">\(P_{00} = 1\)</span> (gambler’s ruin); <span class="math inline">\(P_{NN} = 1\)</span> (casino’s ruin)</li>
 <li><span class="math inline">\(P_{i,i+1} = p\)</span>, <span class="math inline">\(P_{i,i-1} = 1-p\)</span>.</li>
 </ul>
@@ -4377,14 +4377,14 @@ Note
 \lim_{n\to\infty} \frac{1}{n}\sum_{k=1}^n I\{X_k = j\}
 \]</span>
 <ul>
-<li>Does this limit exists? If so, will it coincides with <span class="math inline">\(\pi\)</span>?</li>
+<li>Does this limit exist? If so, will it coincide with <span class="math inline">\(\pi\)</span>?</li>
 </ul></li>
 </ul>
 <section id="characteristics-of-markov-chains" class="level4">
 <h4 class="anchored" data-anchor-id="characteristics-of-markov-chains">Characteristics of Markov chains</h4>
 <ul>
 <li>A <em>period</em> of a Markov chain is <span class="math display">\[
-d(j) \triangleq GCD\{n: P_{jj}^{n} &gt; 0\}
+d(i) \triangleq GCD\{n: P_{ii}^{n} &gt; 0\}
 .
 \]</span>
 <ul>
@@ -4397,32 +4397,33 @@ d(j) \triangleq GCD\{n: P_{jj}^{n} &gt; 0\}
 \]</span></li>
 <li>State <span class="math inline">\(i\)</span> is
 <ul>
-<li><em>recurrent</em> if <span class="math inline">\(\tau_{ii} &lt; \infty\)</span> with probability 1. (e.g., symmetric random walk) — the chain returns to state <span class="math inline">\(i\)</span> infinitely often.
+<li><em>recurrent</em> if <span class="math inline">\(\tau_{ii} &lt; \infty\)</span> with probability 1 — the chain returns to state <span class="math inline">\(i\)</span> infinitely often.
 <ul>
-<li><strong>positive recurrent</strong> if <span class="math inline">\(\operatorname{E}[\tau_{ii}] &lt; \infty\)</span>;</li>
-<li>null recurrent if <span class="math inline">\(\operatorname{E}[\tau_{ii}] = \infty\)</span>.</li>
+<li><strong>positive recurrent</strong> if <span class="math inline">\(\operatorname{E}[\tau_{ii}] &lt; \infty\)</span> (e.g., gambler’s ruin with <span class="math inline">\(p &lt; 1/2\)</span>);</li>
+<li>null recurrent if <span class="math inline">\(\operatorname{E}[\tau_{ii}] = \infty\)</span> (e.g., gambler’s ruin with <span class="math inline">\(p=1/2\)</span>).</li>
 </ul></li>
-<li><em>transient</em> otherwise. (e.g., asymmetric random walk)</li>
+<li><em>transient</em> if <span class="math inline">\(\tau_{ii} = \infty\)</span>. (e.g., gambler’s ruin with <span class="math inline">\(p &gt; 1/2\)</span>)</li>
 </ul></li>
 <li>If <span class="math inline">\(i \leftrightarrow j\)</span>, then <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> are either recurrent or transient at the same time — recurrence is the communication class property.</li>
 <li>For a communication class <span class="math inline">\(C\)</span>, all states in <span class="math inline">\(C\)</span> are either transient, positive recurrent, or null recurrent.</li>
 </ul></li>
 <li>Ergodicity: a Markov chain is <strong>ergodic</strong> if it is aperiodic and positive recurrent.
 <ul>
-<li>In a <em>finite state-space</em>, irreducible Markov chain, all states are positive recurrent — aperiodic + irreducible = ergodic.</li>
+<li>In a <em>finite state space</em>, irreducible Markov chain, all states are positive recurrent — aperiodic + irreducible = ergodic.</li>
 </ul></li>
 </ul>
 </section>
 <section id="limit-theorems" class="level4">
 <h4 class="anchored" data-anchor-id="limit-theorems">Limit Theorems</h4>
 <ol type="1">
-<li>If a Markov chain is irreducible and ergodic, then
+<li><p>An irreducible Markov chain has the <em>unique</em> stationary distribution if and only if it is positive recurrent.</p></li>
+<li><p>If a Markov chain is irreducible and ergodic, then</p>
 <ol type="a">
 <li>the limit <span class="math inline">\(\lim_{n\to\infty} P_{ij}^{(n)} = \pi_j\)</span> exists, <em>independent of</em> <span class="math inline">\(i\)</span>;</li>
-<li><span class="math inline">\(\pi = (\pi_j)_{j\in S}\)</span> <strong>uniquely</strong> satisfies <span class="math inline">\(\pi = \pi P\)</span>, <span class="math inline">\(\mathbf{1}^\top \pi = 1\)</span>, <span class="math inline">\(\pi \geq 0\)</span>;</li>
+<li><span class="math inline">\(\pi = (\pi_j)_{j\in S}\)</span> uniquely satisfies <span class="math inline">\(\pi = \pi P\)</span>, <span class="math inline">\(\mathbf{1}^\top \pi = 1\)</span>, <span class="math inline">\(\pi \geq 0\)</span>;</li>
 <li><span class="math inline">\(\pi_j = \lim_{n\to\infty}\frac{1}{n}\sum_{k=1}^n I\{X_k=j \mid X_0=i\} = 1/\operatorname{E}[\tau_{jj}]\)</span>.</li>
 </ol></li>
-<li>For an irreducible, aperiodic Markov chain, if there is a solution to the equation <span class="math inline">\(\pi = \pi P\)</span>, <span class="math inline">\(\mathbf{1}^\top \pi = 1\)</span>, <span class="math inline">\(\pi \geq 0\)</span>; then <span class="math inline">\(\lim_{n\to\infty} P_{ij}^{(n)} = \pi_j\)</span>, and the chain is positive recurrent.</li>
+<li><p>For an irreducible, aperiodic Markov chain, if <span class="math inline">\(\pi\)</span> is such that <span class="math inline">\(\pi = \pi P\)</span>, <span class="math inline">\(\mathbf{1}^\top \pi = 1\)</span>, <span class="math inline">\(\pi \geq 0\)</span>, then <span class="math inline">\(\lim_{n\to\infty} P_{ij}^{(n)} = \pi_j\)</span>, and the chain is positive recurrent hence ergodic.</p></li>
 </ol>
 </section>
 <section id="ergodic-theorem" class="level4">
@@ -4432,7 +4433,7 @@ d(j) \triangleq GCD\{n: P_{jj}^{n} &gt; 0\}
 \frac{1}{n}\sum_{k=1}^n g(X_k) \stackrel{n\to\infty}{\to} \operatorname{E}_{\pi}[g(X)]
 \]</span> with probabilty 1.</p></li>
 <li><p>The ergodic theorem extends the strong law of large numbers from i.i.d. sequences to Markov chains.</p></li>
-<li><p>Thus we can extend Monte Clarlo integration to Markov (non-i.i.d.) seqeunces — Markov chain Monte Carlo (MCMC)</p></li>
+<li><p>Thus we can extend Monte Clarlo integration to Markov (non-i.i.d.) sequences — Markov chain Monte Carlo</p></li>
 </ul>
 </section>
 </section>
@@ -4440,7 +4441,7 @@ d(j) \triangleq GCD\{n: P_{jj}^{n} &gt; 0\}
 <h3 class="anchored" data-anchor-id="mcmc-sampling-strategy">MCMC sampling strategy</h3>
 <ul>
 <li><p>Construct an irreducible, aperiodic, and positive recurrent Markov chain for which the stationary distribution equals the target distribution <span class="math inline">\(f\)</span>.</p></li>
-<li><p>From these samples, expectations of functions of random variable <span class="math inline">\(X \sim f\)</span> can be reliably estimated.</p></li>
+<li><p>By sampling from this MC, expectations of functions of random variable <span class="math inline">\(X \sim f\)</span> can be reliably estimated.</p></li>
 </ul>
 <section id="detailed-balance-condition" class="level4">
 <h4 class="anchored" data-anchor-id="detailed-balance-condition">Detailed balance condition</h4>
@@ -4458,7 +4459,7 @@ d(j) \triangleq GCD\{n: P_{jj}^{n} &gt; 0\}
 <ul>
 <li><p>Continuous-state-space, time-homogeneous MC <span class="math display">\[
 P_{ij} \rightarrow K(x, y)
-\]</span> where <span class="math inline">\(K(x, y) = P_{X_{n+1}\mid X_n}(y \mid x)\)</span> is the <em>transition density</em> such that <span class="math inline">\(\int_S K(x, y) dy = 1\)</span>.</p></li>
+\]</span> where <span class="math inline">\(K(x, y) = P_{X_{n+1}\mid X_n}(y \mid x)\)</span> is the <em>transition kernel</em> such that <span class="math inline">\(\int_S K(x, y) dy = 1\)</span>.</p></li>
 <li><p>Irreducibility, recurrence, stationary distribution, etc. are defined analogously as the discrete state space case.</p></li>
 <li><p>Detailed balance condition: <span class="math display">\[
 \pi(x) K(x, y) = \pi(y) K(y, x)
@@ -4700,7 +4701,7 @@ R(\theta^{(t)}, \tilde{\theta})
 <details><summary>Standard Output</summary>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  0.296   0.005   0.301 </code></pre>
+  0.303   0.007   0.310 </code></pre>
 </div>
 </details>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>posterior_df1 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">theta =</span> fit1<span class="sc">$</span>theta)</span>
@@ -4722,7 +4723,7 @@ R(\theta^{(t)}, \tilde{\theta})
 <details><summary>Standard Output</summary>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  0.283   0.000   0.283 </code></pre>
+  0.293   0.000   0.292 </code></pre>
 </div>
 </details>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>posterior_df2 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">theta =</span> fit2<span class="sc">$</span>theta)</span>
@@ -4814,7 +4815,7 @@ N\left( \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \begin{pmatrix} 1 &amp; \rho \\ \r
 <details><summary>Standard Output</summary>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 10.735   0.000  10.736 </code></pre>
+ 11.082   0.000  11.084 </code></pre>
 </div>
 </details>
 </div>
