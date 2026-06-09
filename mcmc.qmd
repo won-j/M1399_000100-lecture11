@@ -37,7 +37,7 @@ Markov chain Monte Carlo (MCMC) is a collection of methods simulating a distribu
 A distcrete time, discrete-state-space Markov chain is a sequence of random variables $\{X_n\}$ where $X_n \subset S \subset \mathbb{N}$ for all $n=0, 1, 2,\dotsc$,
 with 
 $$
-    \Pr(X_{n+1} \mid X_n = i, X_{n-1} = i_{n-1}, \dotsc ) = \Pr(X_{n+1}=i \mid X_n = i) =: P_{ij}(n)
+    \Pr(X_{n+1} = j \mid X_n = i, X_{n-1} = i_{n-1}, \dotsc ) = \Pr(X_{n+1}=j \mid X_n = i) =: P_{ij}(n)
     .
 $$ 
 Here, $S$ is called the *state space*, and $P_{ij}$ is called the (state-) transition probabilty.
@@ -50,7 +50,7 @@ Here, $S$ is called the *state space*, and $P_{ij}$ is called the (state-) trans
 
 $$
 \begin{align*}
-\Delta_i &= \begin{cases} -1, & \text{w.p.} p \\ -1, & \text{w.p.} 1- p \end{cases}
+\Delta_i &= \begin{cases} +1, & \text{w.p.}~p \\ -1, & \text{w.p.}~1- p \end{cases}
 ,
 \quad
 \{\Delta_i\}~\text{i.i.d.}
@@ -67,7 +67,7 @@ $$
 
 #### Example 2. Gambler's ruin
 
--   $N$: casino's wealth. $S = \{1, 2 \dotsc, N\}$ (gambler's wealth)
+-   $N$: casino's wealth. $S = \{0, 1, 2 \dotsc, N\}$ (gambler's wealth)
 -   $P_{00} = 1$ (gambler's ruin); $P_{NN} = 1$ (casino's ruin)
 -   $P_{i,i+1} = p$, $P_{i,i-1} = 1-p$.
 
@@ -126,13 +126,13 @@ $$
 $$
     \lim_{n\to\infty} \frac{1}{n}\sum_{k=1}^n I\{X_k = j\}
 $$
-    +   Does this limit exists? If so, will it coincides with $\pi$?
+    +   Does this limit exist? If so, will it coincide with $\pi$?
 
 #### Characteristics of Markov chains
 
 -   A *period* of a Markov chain is
 $$
-    d(j) \triangleq GCD\{n: P_{jj}^{n} > 0\}
+    d(i) \triangleq GCD\{n: P_{ii}^{n} > 0\}
     .
 $$
     +   A Markov chain is **aperiodic** if $d(i) = 1$ for all $i \in S$;
@@ -143,25 +143,27 @@ $$
         \tau_{ii} = \begin{cases} \min\{n \geq 1: X_n = i, X_0 = i\}, & ~ \\ \infty, \text{if}~X_n \neq i, \forall n > 0. \end{cases}
 $$
     +   State $i$ is
-        +   *recurrent* if $\tau_{ii} < \infty$ with probability 1. (e.g., symmetric random walk) --- the chain returns to state $i$ infinitely often.
-            +   **positive recurrent** if $\operatorname{E}[\tau_{ii}] < \infty$;
-            +   null recurrent if $\operatorname{E}[\tau_{ii}] = \infty$.
-        +   *transient* otherwise. (e.g., asymmetric random walk)
+        +   *recurrent* if $\tau_{ii} < \infty$ with probability 1 --- the chain returns to state $i$ infinitely often.
+            +   **positive recurrent** if $\operatorname{E}[\tau_{ii}] < \infty$ (e.g., gambler's ruin with $p < 1/2$);
+            +   null recurrent if $\operatorname{E}[\tau_{ii}] = \infty$ (e.g., gambler's ruin with $p=1/2$).
+        +   *transient* if $\tau_{ii} = \infty$. (e.g., gambler's ruin with $p > 1/2$)
     +   If $i \leftrightarrow j$, then $i$ and $j$ are either recurrent or transient at the same time --- recurrence is the communication class property.
     +   For a communication class $C$, all states in $C$ are either transient, positive recurrent, or  null recurrent.
 
 -   Ergodicity: a Markov chain is **ergodic** if it is aperiodic and positive recurrent.
-    +   In a *finite state-space*, irreducible Markov chain, all states are positive recurrent --- aperiodic + irreducible = ergodic.
+    +   In a *finite state space*, irreducible Markov chain, all states are positive recurrent --- aperiodic + irreducible = ergodic.
 
 #### Limit Theorems
 
-1.  If a Markov chain is irreducible and ergodic, then
+1.  An irreducible Markov chain has the *unique* stationary distribution if and only if it is positive recurrent.
+
+2.  If a Markov chain is irreducible and ergodic, then
     a.  the limit $\lim_{n\to\infty} P_{ij}^{(n)} = \pi_j$ exists, *independent of* $i$;
-    b.  $\pi = (\pi_j)_{j\in S}$ **uniquely** satisfies $\pi = \pi P$, $\mathbf{1}^\top \pi = 1$, $\pi \geq 0$;
+    b.  $\pi = (\pi_j)_{j\in S}$ uniquely satisfies $\pi = \pi P$, $\mathbf{1}^\top \pi = 1$, $\pi \geq 0$;
     c.  $\pi_j = \lim_{n\to\infty}\frac{1}{n}\sum_{k=1}^n I\{X_k=j \mid X_0=i\} = 1/\operatorname{E}[\tau_{jj}]$.
 
-2.  For an irreducible, aperiodic Markov chain, if there is a solution to the equation $\pi = \pi P$, $\mathbf{1}^\top \pi = 1$, $\pi \geq 0$;
-then $\lim_{n\to\infty} P_{ij}^{(n)} = \pi_j$, and the chain is positive recurrent.
+3.  For an irreducible, aperiodic Markov chain, if $\pi$ is such that $\pi = \pi P$, $\mathbf{1}^\top \pi = 1$, $\pi \geq 0$,
+then $\lim_{n\to\infty} P_{ij}^{(n)} = \pi_j$, and the chain is positive recurrent hence ergodic.
 
 
 #### Ergodic Theorem 
@@ -174,13 +176,13 @@ $$
 with probabilty 1.
 
 -   The ergodic theorem extends the strong law of large numbers from i.i.d. sequences to Markov chains.
--   Thus we can extend Monte Clarlo integration to Markov (non-i.i.d.) seqeunces --- Markov chain Monte Carlo (MCMC)
+-   Thus we can extend Monte Clarlo integration to Markov (non-i.i.d.) sequences --- Markov chain Monte Carlo
 
 ### MCMC sampling strategy
 
 -   Construct an irreducible, aperiodic, and positive recurrent Markov chain for which the stationary distribution equals the target distribution $f$.
 
--   From these samples, expectations of functions of random variable $X \sim f$ can be reliably estimated.
+-   By sampling from this MC, expectations of functions of random variable $X \sim f$ can be reliably estimated.
 
 #### Detailed balance condition
 
@@ -199,7 +201,7 @@ then $\pi = (\pi_i)_{i\in S}$ is a stationary distribution of the MC. (Why?)
 $$
     P_{ij} \rightarrow K(x, y)
 $$
-where $K(x, y) = P_{X_{n+1}\mid X_n}(y \mid x)$ is the *transition density* such that $\int_S K(x, y) dy = 1$.
+where $K(x, y) = P_{X_{n+1}\mid X_n}(y \mid x)$ is the *transition kernel* such that $\int_S K(x, y) dy = 1$.
 
 -   Irreducibility, recurrence, stationary distribution, etc. are defined analogously as the discrete state space case.
 
