@@ -63,7 +63,7 @@ X_0 = 0
 \end{align*}
 $$
 
--   $P_{i,i+1} = p$, $P_{i,i-1} = 1 - p$, $S = \mathbb{N}$.
+-   $P_{i,i+1} = p$, $P_{i,i-1} = 1 - p$, $S = \mathbb{Z}$.
 
 #### Example 2. Gambler's ruin
 
@@ -89,7 +89,7 @@ $$
 
 #### Example
 
--   Random walk: $S = \mathbb{N}$, irreducible.
+-   Random walk: $S = \mathbb{Z}$, irreducible.
 -   Gambler's ruin: $S = \{0\} \cup \{1, \dotsc, N-1\} \cup \{N\}$.
 
 
@@ -126,7 +126,7 @@ $$
 $$
     \lim_{n\to\infty} \frac{1}{n}\sum_{k=1}^n I\{X_k = j\}
 $$
-    +   Does this limit exist? If so, will it coincide with $\pi$?
+    +   Does this limit exist? If so, will it coincide with $\pi_j$?
 
 #### Characteristics of Markov chains
 
@@ -224,7 +224,7 @@ $$
 
 For $t= 0, 1, \dotsc$, 
 
-1.  Sample a condidate alue $\tilde{X}$ from a *proposal distribution* $g(\cdot \mid X^{(t)})$.
+1.  Sample a condidate value $\tilde{X}$ from a *proposal distribution* $g(\cdot \mid X^{(t)})$.
 
 2.  Compute the Metropolis-Hastings ratio
 $$
@@ -278,7 +278,7 @@ and the $\delta$ is the Dirac delta function.
 
 #### Example: discrete Metropolis
 
--   For each state $i$, assume that $g(i, i) > 0$ and there exists a neighboring state $j$ ($g(j\mid i) > 0$) such that $f(i) > f(j)$. Then
+-   For each state $i$, assume that $g(i \mid i) > 0$ and there exists a neighboring state $j$ ($g(j\mid i) > 0$) such that $f(i) > f(j)$. Then
 $$
     \alpha(i, j) = \min\{ f(j)/f(i), 1\} < 1
     .
@@ -505,7 +505,7 @@ $$
     \\
     X_{p-1}^{(t+1)} &\sim f_{X_{p-1} \mid X_{-(p-1)}}(\cdot \mid X_2^{(t+1)}, \dotsc, X_{p-2}^{(t+1)}, X_p^{(t)})
     \\
-    X_p^{(t+1)} &\sim f_{X_p \mid X_{-p}}(\cdot \mid X_1^{(t+1)}, X_2^{(t+1)}, \dotsc, X_{p-1}^{(t)})
+    X_p^{(t+1)} &\sim f_{X_p \mid X_{-p}}(\cdot \mid X_1^{(t+1)}, X_2^{(t+1)}, \dotsc, X_{p-1}^{(t+1)})
 \end{align*}
 $$
 cf. Gauss-Seidel.
