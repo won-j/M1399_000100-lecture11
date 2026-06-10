@@ -146,7 +146,7 @@ $$
         +   *recurrent* if $\tau_{ii} < \infty$ with probability 1 --- the chain returns to state $i$ infinitely often.
             +   **positive recurrent** if $\operatorname{E}[\tau_{ii}] < \infty$ (e.g., gambler's ruin with $p < 1/2$);
             +   null recurrent if $\operatorname{E}[\tau_{ii}] = \infty$ (e.g., gambler's ruin with $p=1/2$).
-        +   *transient* if $\tau_{ii} = \infty$. (e.g., gambler's ruin with $p > 1/2$)
+        +   *transient* if $\Pr(\tau_{ii} = \infty) > 0$. (e.g., gambler's ruin with $p > 1/2$)
     +   If $i \leftrightarrow j$, then $i$ and $j$ are either recurrent or transient at the same time --- recurrence is the communication class property.
     +   For a communication class $C$, all states in $C$ are either transient, positive recurrent, or  null recurrent.
 
