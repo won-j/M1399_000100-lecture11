@@ -4402,7 +4402,7 @@ d(i) \triangleq GCD\{n: P_{ii}^{n} &gt; 0\}
 <li><strong>positive recurrent</strong> if <span class="math inline">\(\operatorname{E}[\tau_{ii}] &lt; \infty\)</span> (e.g., gambler’s ruin with <span class="math inline">\(p &lt; 1/2\)</span>);</li>
 <li>null recurrent if <span class="math inline">\(\operatorname{E}[\tau_{ii}] = \infty\)</span> (e.g., gambler’s ruin with <span class="math inline">\(p=1/2\)</span>).</li>
 </ul></li>
-<li><em>transient</em> if <span class="math inline">\(\tau_{ii} = \infty\)</span>. (e.g., gambler’s ruin with <span class="math inline">\(p &gt; 1/2\)</span>)</li>
+<li><em>transient</em> if <span class="math inline">\(\Pr(\tau_{ii} = \infty) &gt; 0\)</span>. (e.g., gambler’s ruin with <span class="math inline">\(p &gt; 1/2\)</span>)</li>
 </ul></li>
 <li>If <span class="math inline">\(i \leftrightarrow j\)</span>, then <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> are either recurrent or transient at the same time — recurrence is the communication class property.</li>
 <li>For a communication class <span class="math inline">\(C\)</span>, all states in <span class="math inline">\(C\)</span> are either transient, positive recurrent, or null recurrent.</li>
@@ -4701,7 +4701,7 @@ R(\theta^{(t)}, \tilde{\theta})
 <details><summary>Standard Output</summary>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  0.303   0.007   0.310 </code></pre>
+  0.302   0.005   0.307 </code></pre>
 </div>
 </details>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>posterior_df1 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">theta =</span> fit1<span class="sc">$</span>theta)</span>
@@ -4723,7 +4723,7 @@ R(\theta^{(t)}, \tilde{\theta})
 <details><summary>Standard Output</summary>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  0.293   0.000   0.292 </code></pre>
+  0.278   0.000   0.278 </code></pre>
 </div>
 </details>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>posterior_df2 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">theta =</span> fit2<span class="sc">$</span>theta)</span>
@@ -4815,7 +4815,7 @@ N\left( \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \begin{pmatrix} 1 &amp; \rho \\ \r
 <details><summary>Standard Output</summary>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 11.082   0.000  11.084 </code></pre>
+ 10.044   0.004  10.049 </code></pre>
 </div>
 </details>
 </div>
